@@ -1,0 +1,25 @@
+# venv
+.venv/
+venv/
+env/
+backend/.venv/
+backend/venv/
+backend/env/
+
+# python cache
+__pycache__/
+*.pyc
+
+# dll / binaries
+*.dll
+*.lib
+*.so
+
+# build
+dist/
+build/
+
+# editor
+.vscode/
+.idea/
+

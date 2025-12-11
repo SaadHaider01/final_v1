@@ -1,0 +1,64 @@
+# ---------------------------
+# Python
+# ---------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.so
+*.dll
+*.dylib
+
+# ---------------------------
+# Environments
+# ---------------------------
+.venv/
+venv/
+env/
+ENV/
+*.env
+*.venv
+
+# ---------------------------
+# Packages / Build
+# ---------------------------
+*.egg-info/
+dist/
+build/
+wheels/
+pip-wheel-metadata/
+
+# ---------------------------
+# Logs
+# ---------------------------
+*.log
+logs/
+
+# ---------------------------
+# Cache
+# ---------------------------
+.pytest_cache/
+.ipynb_checkpoints/
+.cache/
+.mypy_cache/
+
+# ---------------------------
+# IDE / Editor Config
+# ---------------------------
+.vscode/
+.idea/
+
+# ---------------------------
+# Django / Flask (if used)
+# ---------------------------
+*.sqlite3
+instance/
+*.db
+
+# ---------------------------
+# Ignore uploaded files or temp folders (optional)
+# ---------------------------
+media/
+uploads/
+temp/
