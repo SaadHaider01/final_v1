@@ -1,4 +1,47 @@
+import os
+os.environ["CHROMA_TELEMETRY_ENABLED"] = "false"
+
 import chromadb
+
+# ============================================
+# Function to fully disable telemetry at runtime
+# ============================================
+def disable_chroma_telemetry():
+    """Patch all telemetry modules AFTER Chroma loads them."""
+    try:
+        # Patch product telemetry (your actual error)
+        prod = __import__("chromadb.telemetry.product", fromlist=["capture"])
+        prod.capture = lambda *args, **kwargs: None
+    except Exception:
+        pass
+
+    try:
+        events = __import__("chromadb.telemetry.events", fromlist=["capture"])
+        events.capture = lambda *args, **kwargs: None
+    except Exception:
+        pass
+
+    try:
+        posthog = __import__("chromadb.telemetry.posthog", fromlist=["Posthog"])
+        class DummyPosthog:
+            def capture(self, *a, **kw): return None
+            def shutdown(self): return None
+        posthog.Posthog = DummyPosthog
+    except Exception:
+        pass
+
+    try:
+        ot = __import__("chromadb.telemetry.opentelemetry", fromlist=["configure_otel"])
+        ot.configure_otel = lambda *a, **kw: None
+    except Exception:
+        pass
+
+# Call it once immediately
+disable_chroma_telemetry()
+
+
+
+
 
 class VectorStore:
     def __init__(self, embed_fn, persist_dir="./data/vector_db"):

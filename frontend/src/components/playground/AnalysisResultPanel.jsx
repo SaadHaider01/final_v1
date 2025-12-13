@@ -7,36 +7,9 @@ import {
 
 // 🔹 Stopwords list so we don't highlight common words
 const stopwords = new Set([
-  "the",
-  "is",
-  "are",
-  "a",
-  "an",
-  "of",
-  "in",
-  "on",
-  "to",
-  "and",
-  "or",
-  "for",
-  "with",
-  "by",
-  "as",
-  "at",
-  "from",
-  "that",
-  "this",
-  "these",
-  "those",
-  "be",
-  "was",
-  "were",
-  "it",
-  "its",
-  "into",
-  "their",
-  "there",
-  "then"
+  "the", "is", "are", "a", "an", "of", "in", "on", "to", "and", "or", 
+  "for", "with", "by", "as", "at", "from", "that", "this", "these", 
+  "those", "be", "was", "were", "it", "its", "into", "their", "there", "then"
 ]);
 
 // 🔹 Helper to highlight overlap between question and syllabus chunk
@@ -49,8 +22,6 @@ function highlightOverlap(question, text) {
     .filter((w) => w && !stopwords.has(w));
 
   const keySet = new Set(questionWords);
-
-  // Split text but keep spaces
   const tokens = text.split(/(\s+)/);
 
   return tokens.map((tok, idx) => {
@@ -77,9 +48,9 @@ function AnalysisResultPanel({ result }) {
     );
   }
 
-  const isBatch = Array.isArray(result.questions);
+  const isBatch = result.mode === "batch" || Array.isArray(result.questions);
 
-  // 🔹 Batch mode UI
+  // 🔹 BATCH MODE UI
   if (isBatch) {
     return (
       <div className="card">
@@ -135,6 +106,28 @@ function AnalysisResultPanel({ result }) {
                 </div>
               </div>
 
+              {/* LLM Decision and Justification */}
+              {qres.llm_decision && (
+                <div className="mb-3 p-3 bg-primary-50 rounded-lg border border-primary-200">
+                  <h5 className="text-xs font-medium text-gray-700 mb-1">
+                    LLM Curriculum Validator
+                  </h5>
+                  <p className="text-sm text-gray-900 font-medium">
+                    Decision: {qres.llm_decision}
+                  </p>
+                  {qres.llm_justification && (
+                    <p className="text-xs text-gray-700 mt-1 italic">
+                      {qres.llm_justification}
+                    </p>
+                  )}
+                  {qres.llm_module && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      <strong>Module Match:</strong> {qres.llm_module}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Most relevant syllabus match */}
               {qres.top_chunks && qres.top_chunks.length > 0 && (
                 <div>
@@ -153,9 +146,7 @@ function AnalysisResultPanel({ result }) {
                         Distance: {qres.top_chunks[0].distance.toFixed(4)} |{" "}
                         Similarity:{" "}
                         {qres.top_chunks[0].similarity !== undefined
-                          ? `${(
-                              qres.top_chunks[0].similarity * 100
-                            ).toFixed(1)}%`
+                          ? `${(qres.top_chunks[0].similarity * 100).toFixed(1)}%`
                           : "—"}
                       </p>
                     )}
@@ -169,7 +160,7 @@ function AnalysisResultPanel({ result }) {
     );
   }
 
-  // 🔹 Single-question UI (existing design)
+  // 🔹 SINGLE-QUESTION UI
   return (
     <div className="card">
       <h3 className="text-xl font-semibold mb-4">Analysis Results</h3>
@@ -218,48 +209,50 @@ function AnalysisResultPanel({ result }) {
       </div>
 
       {/* Gatekeeper Status */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <h4 className="text-sm font-medium text-gray-700 mb-2">
-          Cosine Gatekeeper
-        </h4>
-        <div className="flex items-center space-x-2">
-          {result.gatekeeper_passed ? (
-            <>
-              <svg
-                className="w-5 h-5 text-green-600"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-green-700 font-medium">
-                Passed - LLM Validation Performed
-              </span>
-            </>
-          ) : (
-            <>
-              <svg
-                className="w-5 h-5 text-red-600"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-red-700 font-medium">
-                Blocked - Below Threshold
-              </span>
-            </>
-          )}
+      {result.gatekeeper_passed !== undefined && (
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">
+            Cosine Gatekeeper
+          </h4>
+          <div className="flex items-center space-x-2">
+            {result.gatekeeper_passed ? (
+              <>
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-green-700 font-medium">
+                  Passed - LLM Validation Performed
+                </span>
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5 text-red-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-red-700 font-medium">
+                  Blocked - Below Threshold
+                </span>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* LLM Decision */}
       {result.llm_decision && (
@@ -270,9 +263,16 @@ function AnalysisResultPanel({ result }) {
           <p className="text-gray-900 font-medium mb-2">
             Decision: {result.llm_decision}
           </p>
-          <p className="text-gray-700 text-sm italic">
-            {result.llm_justification}
-          </p>
+          {result.llm_justification && (
+            <p className="text-gray-700 text-sm italic mb-2">
+              {result.llm_justification}
+            </p>
+          )}
+          {result.llm_module && (
+            <p className="text-gray-700 text-sm">
+              <strong>Module Match:</strong> {result.llm_module}
+            </p>
+          )}
         </div>
       )}
 
