@@ -4,7 +4,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Path to your GGUF model file
-LLM_MODEL_PATH = os.path.join(BASE_DIR, "models", "Phi-3-mini-4k-instruct-q4.gguf")
+LLM_MODEL_PATH = os.path.join(BASE_DIR, "models", "mistral-7b-instruct-v0.2.Q4_K_M.gguf")
 
 # LLM runtime parameters
 LLM_RUNTIME = {
