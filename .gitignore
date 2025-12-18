@@ -23,3 +23,12 @@ build/
 .vscode/
 .idea/
 
+# ---- LLM models ----
+*.gguf
+*.bin
+*.pt
+*.pth
+*.safetensors
+
+#---node module---
+frontend/node_modules/
