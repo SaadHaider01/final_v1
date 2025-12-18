@@ -5,22 +5,22 @@ import Card from '../components/common/Card';
 function About() {
   const teamMembers = [
     {
-      name: 'Student Name 1',
+      name: 'Saad Haider',
       role: 'Lead Developer',
       contributions: 'RAG architecture design, SBERT integration, system implementation',
     },
     {
-      name: 'Student Name 2',
+      name: 'Piklu Kundu',
       role: 'ML Engineer',
       contributions: 'LLM validation module, few-shot prompting strategy, experimental evaluation',
     },
     {
-      name: 'Student Name 3',
+      name: 'Niloy Pal',
       role: 'Full-Stack Developer',
       contributions: 'Frontend interface, API design, ChromaDB integration',
     },
     {
-      name: 'Student Name 4',
+      name: 'Baidurya Muhuri',
       role: 'Data Engineer',
       contributions: 'Syllabus preprocessing, chunking algorithms, dataset curation',
     },
@@ -28,15 +28,11 @@ function About() {
 
   const mentors = [
     {
-      name: 'Dr. [Mentor Name]',
-      designation: 'Project Guide',
+      name: 'Dr. Anirban Goswami',
+      designation: 'Project Mentor',
       department: 'Department of Information Technology',
     },
-    {
-      name: 'Prof. [Co-Guide Name]',
-      designation: 'Co-Guide',
-      department: 'Department of Information Technology',
-    },
+    
   ];
 
   return (
@@ -69,7 +65,7 @@ function About() {
             </div>
             <div>
               <div className="font-semibold text-gray-900 mb-1">Institution</div>
-              <div>[University/College Name]</div>
+              <div>Techno Main Salt Lake</div>
             </div>
             <div>
               <div className="font-semibold text-gray-900 mb-1">Project Type</div>
@@ -153,7 +149,7 @@ function About() {
           </div>
         </Card>
 
-        {/* Contact */}
+        {/* Contact
         <Card>
           <h3 className="text-2xl font-semibold mb-4">Contact & Future Collaboration</h3>
           <p className="text-gray-700 mb-4">
@@ -171,7 +167,7 @@ function About() {
               <strong>GitHub:</strong> [Repository link - if applicable]
             </div>
           </div>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );

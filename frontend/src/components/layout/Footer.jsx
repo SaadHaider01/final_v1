@@ -20,11 +20,11 @@ function Footer() {
           <div>
             <h3 className="text-white font-semibold text-lg mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
-              <li>
+              {/* <li>
                 <a href="/problem" className="hover:text-primary-400 transition-colors">
                   Problem Statement
                 </a>
-              </li>
+              </li> */}
               <li>
                 <a href="/architecture" className="hover:text-primary-400 transition-colors">
                   System Architecture
@@ -35,11 +35,11 @@ function Footer() {
                   Try Demo
                 </a>
               </li>
-              <li>
+              {/* <li>
                 <a href="/results" className="hover:text-primary-400 transition-colors">
                   Experimental Results
                 </a>
-              </li>
+              </li> */}
             </ul>
           </div>
 

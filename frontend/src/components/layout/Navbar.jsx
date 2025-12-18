@@ -7,11 +7,11 @@ function Navbar() {
 
   const navLinks = [
     { path: '/', label: 'Home' },
-    { path: '/problem', label: 'Problem' },
+    //{ path: '/problem', label: 'Problem' },
     { path: '/architecture', label: 'Architecture' },
     { path: '/playground', label: 'Demo' },
-    { path: '/results', label: 'Results' },
-    { path: '/references', label: 'References' },
+    // { path: '/results', label: 'Results' },
+    //{ path: '/references', label: 'References' },
     { path: '/about', label: 'About' },
   ];
 
