@@ -55,16 +55,32 @@ class VectorStore:
         )
 
     def add_syllabus(self, syllabus_id, chunks):
-        embeddings = self.embed_fn(chunks)
+        """
+        chunks: list of str  OR  list of (text, module_label) tuples.
+        Module labels are stored in ChromaDB metadata for later retrieval.
+        """
+        # Normalise to (text, label) pairs
+        pairs = []
+        for c in chunks:
+            if isinstance(c, tuple):
+                pairs.append(c)
+            else:
+                pairs.append((c, None))
 
-        ids = [f"{syllabus_id}_{i}" for i in range(len(chunks))]
-        metadatas = [{"syllabus_id": syllabus_id, "chunk": chunk} for chunk in chunks]
+        texts      = [p[0] for p in pairs]
+        embeddings = self.embed_fn(texts)
+
+        ids       = [f"{syllabus_id}_{i}" for i in range(len(texts))]
+        metadatas = [
+            {"syllabus_id": syllabus_id, "chunk": t, "module": m or ""}
+            for t, m in pairs
+        ]
 
         self.collection.add(
             ids=ids,
             embeddings=embeddings,
             metadatas=metadatas,
-            documents=chunks  # store visible text
+            documents=texts
         )
 
     def query(self, query_text, k=3):

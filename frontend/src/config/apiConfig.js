@@ -5,4 +5,10 @@ export const API_ENDPOINTS = {
   ANALYZE_QUESTION: '/analyze_question',
   LIST_SYLLABI: '/list_syllabi',
   DELETE_SYLLABUS: '/delete_syllabus',
+  // Feature 4 — BOS endpoints
+  BOS: '/bos',
+  DEPARTMENTS: '/departments',
+  SUBJECTS: '/subjects',
+  // Upgrade B — URL ingestion
+  INGEST_FROM_URL: '/ingest_from_url',
 };

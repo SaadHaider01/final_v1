@@ -14,3 +14,6 @@ LLM_RUNTIME = {
     # threads: tune to your CPU cores; e.g., 4
     "n_threads": 4,
 }
+
+# Multi-module detection: minimum chunk similarity to count a module
+MODULE_SIMILARITY_THRESHOLD = 0.5
