@@ -65,7 +65,7 @@ class CoMapper:
             return 0
 
         texts      = [c["text"] for c in cos]
-        embeddings = self.embed_fn(texts)
+        embeddings = self.embed_fn(texts, task="passage")
 
         ids       = [f"{syllabus_id}_co_{c['co_id']}" for c in cos]
         metadatas = [
@@ -140,7 +140,7 @@ class CoMapper:
         if self.collection.count() == 0:
             return None
 
-        q_embedding = self.embed_fn([question])
+        q_embedding = self.embed_fn([question], task="query")
         where       = {"syllabus_id": syllabus_id} if syllabus_id else None
 
         try:

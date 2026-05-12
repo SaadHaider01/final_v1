@@ -68,7 +68,7 @@ class VectorStore:
                 pairs.append((c, None))
 
         texts      = [p[0] for p in pairs]
-        embeddings = self.embed_fn(texts)
+        embeddings = self.embed_fn(texts, task="passage")
 
         ids       = [f"{syllabus_id}_{i}" for i in range(len(texts))]
         metadatas = [
@@ -83,11 +83,25 @@ class VectorStore:
             documents=texts
         )
 
-    def query(self, query_text, k=3):
-        query_embedding = self.embed_fn([query_text])
+    def delete_syllabus(self, syllabus_id):
+        """Remove all chunks belonging to a given syllabus_id from the collection."""
+        try:
+            self.collection.delete(where={"syllabus_id": syllabus_id})
+            return True
+        except Exception as e:
+            print(f"Error deleting syllabus {syllabus_id}: {e}")
+            return False
+
+    def query(self, query_text, k=3, syllabus_id=None):
+        query_embedding = self.embed_fn([query_text], task="query")
+
+        where_clause = None
+        if syllabus_id:
+            where_clause = {"syllabus_id": syllabus_id}
 
         result = self.collection.query(
             query_embeddings=query_embedding,
-            n_results=k
+            n_results=k,
+            where=where_clause
         )
         return result

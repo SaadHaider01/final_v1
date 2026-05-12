@@ -26,12 +26,20 @@ const stopwords = new Set([
 
 function highlightOverlap(question, text) {
   if (!question || !text) return text;
-  const qWords = question.toLowerCase().split(/[^a-z0-9]+/).filter(w => w && !stopwords.has(w));
-  const keySet = new Set(qWords);
+  // Extract meaningful keywords (≥3 chars to avoid noise like "e", "of")
+  const qWords = question.toLowerCase().split(/[^a-z0-9]+/).filter(w => w && w.length >= 3 && !stopwords.has(w));
+  if (qWords.length === 0) return text;
+
   return text.split(/(\s+)/).map((tok, idx) => {
     const clean = tok.toLowerCase().replace(/[^a-z0-9]/g, "");
-    return clean && keySet.has(clean)
-      ? <span key={idx} className="bg-yellow-200 font-semibold">{tok}</span>
+    if (!clean || clean.length < 3) return <span key={idx}>{tok}</span>;
+
+    // Substring match: handles plurals (advantage→advantages),
+    // compounds (commerce→ecommerce), stems (define→definitions)
+    const isMatch = qWords.some(qw => clean.includes(qw) || qw.includes(clean));
+
+    return isMatch
+      ? <span key={idx} style={{ backgroundColor: "#fef08a", fontWeight: 600, borderRadius: "2px", padding: "0 2px" }}>{tok}</span>
       : <span key={idx}>{tok}</span>;
   });
 }
@@ -133,9 +141,6 @@ function ChunkList({ question, chunks, compact = false }) {
       <div className="space-y-2">
         {deduped.map((chunk, i) => (
           <div key={i} className={`bg-white rounded border border-gray-200 ${compact ? "p-3" : "p-4 bg-gray-50 rounded-lg"}`}>
-            {chunk.module && (
-              <p className="text-xs font-semibold text-primary-600 mb-1">{chunk.module}</p>
-            )}
             <p className={`text-gray-800 leading-relaxed ${compact ? "text-sm" : "text-sm"}`}>
               {highlightOverlap(question, chunk.text)}
             </p>
