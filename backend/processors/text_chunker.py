@@ -31,6 +31,34 @@ _SINGLE_LETTER_DASH = re.compile(
 # Normalise lecture-hour markers  "[ 3 L ]" / "[10]" / "[ 2L ]" → ""
 _LECTURE_HOURS = re.compile(r"\[\s*\d+\s*L?\s*\]", re.IGNORECASE)
 
+# Course metadata lines — noise for embeddings, common across all university syllabi.
+# Matches lines containing teaching scheme, marks breakdown, credit info, etc.
+_COURSE_META = re.compile(
+    r"(?:^|\n)[^\n]*?(?:"
+    r"Teaching Scheme|Examination Scheme|Maximum Marks|Credit Points?|"
+    r"Mid Semester|End Semester Exam|Assignment and Quiz|"
+    r"Theory:\s*\d+\s*hrs?|Tutorial:\s*\d+\s*L|Practical:\s*(?:NIL|\d+)|"
+    r"Duration:\s*\d+\s*months?|"
+    r"Name of the Course:|Course Code:|"
+    r"Contacts:\s*\d+\s*L|"
+    r"Hrs/Unit|Marks/Unit|"
+    r"Syllabus and Curricular Mapping|Effective from Acdemic Session|University Syllabus:"
+    r")[^\n]*",
+    re.IGNORECASE,
+)
+
+# University header/footer noise (e.g., Page: 116/123 Maulana Abul Kalam Azad University...)
+_UNIVERSITY_HEADER = re.compile(
+    r"(?:^|\n)\s*Page:\s*\d+/\d+\s+[^\n]*?(?:University\s*of\s*Technology|Syllabus)[^\n]*",
+    re.IGNORECASE,
+)
+
+# Correlation matrices (CO/PO mapping rows full of numbers like "3.00 2.00 2.00 1.75 0 1.00")
+# Matches a sequence of at least 5 numbers (floats or ints) separated by spaces.
+_CORRELATION_MATRIX = re.compile(
+    r"\b(?:\d+(?:\.\d+)?\s+){4,}\d+(?:\.\d+)?\b",
+)
+
 
 def _normalise(text: str) -> str:
     """
@@ -40,6 +68,7 @@ def _normalise(text: str) -> str:
     - Normalise unicode dashes to ASCII hyphens
     - Collapse single-letter-dash-word compounds (E – Commerce → E-Commerce)
     - Remove lecture-hour markers (noise for embeddings)
+    - Remove course metadata lines (teaching scheme, marks, credits)
     - Collapse excessive whitespace
     """
     text = text.replace("\r", "")
@@ -54,9 +83,16 @@ def _normalise(text: str) -> str:
     
     # Step 3: Remove lecture-hour markers (noise for embeddings)
     text = _LECTURE_HOURS.sub("", text)
+
+    # Step 4: Remove course metadata lines, headers, and matrices
+    text = _COURSE_META.sub("", text)
+    text = _UNIVERSITY_HEADER.sub("", text)
+    text = _CORRELATION_MATRIX.sub("", text)
     
-    # Step 4: Collapse excessive whitespace (but keep newlines)
+    # Step 5: Collapse excessive whitespace (but keep newlines)
     text = re.sub(r"[ \t]{2,}", " ", text)
+    # Collapse 3+ consecutive newlines to 2 (keeps section breaks readable)
+    text = re.sub(r"\n{3,}", "\n\n", text)
     
     return text
 

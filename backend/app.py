@@ -123,9 +123,21 @@ _REFERENCE_BOOK_RE = re.compile(
 
 # Common publisher / bibliographic keywords (case-insensitive scan)
 _PUBLISHER_KW = re.compile(
-    r"Publishing|Press|Edition|McGraw|Pearson|Wiley|Springer|Elsevier|"
+    r"Publishing|Publishers|Press|Edition|McGraw|Pearson|Wiley|Springer|Elsevier|"
     r"Oxford|Cambridge|Prentice|Tata|Jaico|Housing|Ltd\.?|Inc\.?|"
     r"\bPHI\b|\bEPH\b|\bTMH\b|\bSPD\b|\bBPB\b",
+    re.IGNORECASE,
+)
+
+# Strong bibliographic signals — patterns that almost certainly indicate
+# a reference book entry, even if the title contains syllabus-sounding words.
+_BIBLIO_SIGNAL = re.compile(
+    r"""\bby\s+[A-Z][a-z]"""             # "by Stavronlakis", "by Reynolds"
+    r"""|\u201c[^\u201d]{5,}\u201d"""     # "curly-quoted title"
+    r'''|"[^"]{5,}"'''                    # "straight-quoted title"
+    r"""|'[^']{5,}'"""                    # 'single-quoted title'
+    r"""|\b\d{1,2}(?:st|nd|rd|th)\s+Ed""" # "2nd Edition"
+    r"""|\bISBN\b""",                     # ISBN number
     re.IGNORECASE,
 )
 
@@ -146,7 +158,7 @@ def _is_reference_entry(text: str) -> bool:
     Catches patterns like:
       - "E-Commerce, M.M. Oka, EPH"
       - "Loshin Pete, Murphy P.A. : Electronic Commerce, Jaico Publishing Housing."
-      - "Beginning E-Commerce, Reynolds, SPD"
+      - '8. "Third Generation Mobile Telecommunication systems", by P.Stavronlakis, Springer Publishers.'
     """
     text = text.strip()
     # Real topics are longer — references are short citation lines
@@ -157,10 +169,17 @@ def _is_reference_entry(text: str) -> bool:
     if _REFERENCE_BOOK_RE.match(text):
         return True
 
-    # Approach 2: publisher keyword in a short chunk with at least 1 comma
-    #   BUT only if the chunk doesn't contain syllabus-topic signals
-    if len(text) < 150 and text.count(",") >= 1 and _PUBLISHER_KW.search(text):
-        # Safety check: if the chunk also has strong syllabus signals, keep it
+    # Approach 2: publisher keyword + bibliographic signal = always a reference
+    #   (overrides syllabus-signal safety valve — book titles often contain
+    #    words like "Systems", "Security", "Management")
+    has_publisher = _PUBLISHER_KW.search(text)
+    has_biblio    = _BIBLIO_SIGNAL.search(text)
+
+    if has_publisher and has_biblio:
+        return True
+
+    # Approach 3: publisher keyword + comma, but no syllabus signal
+    if len(text) < 150 and text.count(",") >= 1 and has_publisher:
         if not _SYLLABUS_SIGNAL.search(text):
             return True
 
@@ -199,7 +218,7 @@ def _dedup_chunks(chunks: list) -> list:
     return result
 
 
-def _smart_filter_chunks(chunks: list, same_gap: float = 0.02, cross_gap: float = 0.05) -> list:
+def _smart_filter_chunks(chunks: list, same_gap: float = 0.02, cross_gap: float = 0.04) -> list:
     """
     Reduce noise by keeping only the most relevant matches.
 
@@ -207,7 +226,7 @@ def _smart_filter_chunks(chunks: list, same_gap: float = 0.02, cross_gap: float 
       1. Always keep match #1 (best similarity).
       2. For subsequent matches, keep ONLY if:
          a. SAME module as #1 AND within `same_gap` (2%) of the best, OR
-         b. DIFFERENT module AND within `cross_gap` (5%) of the best
+         b. DIFFERENT module AND within `cross_gap` (4%) of the best
             (handles cross-module questions without letting unrelated
             subjects sneak in).
       3. Cap at 3 results total.
