@@ -9,6 +9,17 @@ This system reduces verification time and improves accuracy using a hybrid AI + 
 
 ---
 
+## ✅ What has been done till now
+
+- **Domain-Agnostic RAG Pipeline:** Developed a hybrid AI validation system utilizing vector search, deterministic filtering, and LLM reasoning.
+- **Intelligent Syllabus Chunking:** Implemented structural pattern-based extraction that handles varied unit-numbering formats across any academic discipline, eliminating subject-specific hardcoding.
+- **Advanced Sanitization:** Engineered robust backend regex to strip university boilerplate, lecture hour markers, and correlation matrices, ensuring high-quality embeddings.
+- **Smart Filtering:** Designed a dual-gap similarity threshold to prevent cross-subject contamination while preserving cross-module context.
+- **Enriched Metadata:** Integrated Bloom’s taxonomy classification (hybrid 2-pass logic) and CO/PO mapping to provide deep question analysis.
+- **Enhanced UI Feedback:** Transitioned frontend from exact-match to substring-based keyword highlighting for precise user feedback.
+
+---
+
 ## 🧠 System Overview
 
 This project is built as a **hybrid AI system** combining:
@@ -86,11 +97,14 @@ Unlike naive LLM-only solutions, this system prioritizes **accuracy, consistency
 
 ---
 
-## 🔮 Future Improvements
+## 🔮 What more could be done (Future Improvements)
 
-- OCR support for scanned syllabus documents
-- Fine-tuned lightweight model for faster inference
-- Admin dashboards for institutional-level analytics
+- **OCR Integration:** Add support for processing scanned syllabus documents and images.
+- **Model Fine-Tuning:** Develop a fine-tuned lightweight model tailored for academic context to speed up inference and lower costs.
+- **Admin Dashboards:** Build institutional-level analytics to identify frequent syllabus gaps and track assessment quality across programs.
+- **Automated Lifecycle Management:** Expand vector database structure to allow automated purging of stale syllabus records and better versioning.
+- **Real-Time Collaboration:** Allow multiple faculty members to review, adjust, and approve AI-generated validations in a shared workspace.
+- **Expanded File Formats:** Add native support for `.docx` and `.pptx` ingestion pipelines.
 
 ---
 

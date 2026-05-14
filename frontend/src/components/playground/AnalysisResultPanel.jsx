@@ -141,7 +141,7 @@ function ChunkList({ question, chunks, compact = false }) {
       <div className="space-y-2">
         {deduped.map((chunk, i) => (
           <div key={i} className={`bg-white rounded border border-gray-200 ${compact ? "p-3" : "p-4 bg-gray-50 rounded-lg"}`}>
-            <p className={`text-gray-800 leading-relaxed ${compact ? "text-sm" : "text-sm"}`}>
+            <p className={`text-gray-800 leading-relaxed break-words ${compact ? "text-sm" : "text-sm"}`}>
               {highlightOverlap(question, chunk.text)}
             </p>
             {chunk.distance !== undefined && (

@@ -56,3 +56,4 @@ backend/vector_db/
 # ======================
 .env
 .env.*
+TECHNOLOGIES.md
