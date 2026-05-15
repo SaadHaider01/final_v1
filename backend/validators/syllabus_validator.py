@@ -29,6 +29,7 @@ def get_llm():
         model_path=LLM_MODEL_PATH,
         n_ctx=LLM_RUNTIME.get("n_ctx", 2048),
         n_threads=LLM_RUNTIME.get("n_threads", 4),
+        n_gpu_layers=LLM_RUNTIME.get("n_gpu_layers", 0), # Added for GPU offloading
         temperature=LLM_RUNTIME.get("temperature", 0.0),
         verbose=True,
     )

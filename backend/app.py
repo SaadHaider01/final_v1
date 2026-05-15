@@ -10,7 +10,7 @@ import tempfile
 import requests as http_requests
 
 from models.embedder import Embedder
-from processors.pdf_reader import extract_text_from_pdf
+from processors.document_reader import extract_text_from_file
 from processors.metadata_extractor import extract_metadata # Added
 from processors.text_chunker import chunk_syllabus, chunk_syllabus_with_modules
 from vectorstores.chroma_store import VectorStore
@@ -275,6 +275,8 @@ def _build_result(q_text, similarity, top_chunks, analysis):
         "gatekeeper_passed": analysis["gatekeeper_passed"],
         "reason":            analysis["reason"],
         # ---- new fields ----
+        "retrieval_status":  analysis.get("retrieval_status", "MATCH_FOUND"),
+        "match_strength":    analysis.get("match_strength", "WEAK_MATCH"),
         "modules_detected":  analysis["modules_detected"],
         "bloom_level":       analysis["bloom_level"],
         "difficulty":        analysis["difficulty"],
@@ -284,7 +286,7 @@ def _build_result(q_text, similarity, top_chunks, analysis):
         "llm_decision":      analysis["llm"]["llm_decision"]     if analysis["llm"] else None,
         "llm_justification": analysis["llm"]["llm_justification"] if analysis["llm"] else None,
         "llm_module":        analysis["llm"]["llm_module"]        if analysis["llm"] else None,
-        "top_chunks":        top_chunks,
+        "top_chunks":        analysis.get("top_chunks", top_chunks),
     }
 
 
@@ -304,17 +306,27 @@ def _fetch_text_from_url(url: str) -> str:
     except Exception as e:
         raise ValueError(f"Failed to fetch URL: {e}")
 
-    content_type = resp.headers.get("Content-Type", "")
-    is_pdf = "pdf" in content_type.lower() or url.lower().endswith(".pdf")
+    content_type = resp.headers.get("Content-Type", "").lower()
+    url_lower = url.lower()
+    
+    is_doc = any(ext in content_type for ext in ["pdf", "word", "presentation"]) or \
+             any(url_lower.endswith(ext) for ext in [".pdf", ".docx", ".pptx"])
 
-    if is_pdf:
-        # Write to temp file then use existing pypdf extractor
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+    if is_doc:
+        # Determine suffix for temp file
+        suffix = ".pdf"
+        if "word" in content_type or url_lower.endswith(".docx"):
+            suffix = ".docx"
+        elif "presentation" in content_type or url_lower.endswith(".pptx"):
+            suffix = ".pptx"
+            
+        # Write to temp file then use document extractor
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
             tmp.write(resp.content)
             tmp_path = tmp.name
         try:
             with open(tmp_path, "rb") as f:
-                text = extract_text_from_pdf(f)
+                text = extract_text_from_file(f, tmp_path)
         finally:
             os.unlink(tmp_path)
     else:
@@ -338,19 +350,18 @@ def ingest_syllabus():
     mode        = request.form.get("mode", "pdf")
     syllabus_id = str(uuid.uuid4())
 
-    if mode == "pdf":
+    if mode in ["pdf", "file", "document"]:
         if "file" not in request.files:
-            return jsonify({"error": "No PDF uploaded"}), 400
-        text = extract_text_from_pdf(request.files["file"])
+            return jsonify({"error": "No document uploaded"}), 400
+        file_obj = request.files["file"]
+        text = extract_text_from_file(file_obj, file_obj.filename)
     else:
         text = request.form.get("text", "")
         if not text.strip():
             return jsonify({"error": "Empty syllabus text"}), 400
 
     chunks = chunk_syllabus_with_modules(text)
-    vector_db.add_syllabus(syllabus_id, chunks)
-    SYLLABUS_CHUNKS[syllabus_id] = [c for c, _ in chunks]
-
+    
     # Automatic Metadata Extraction (Feature: Academic Context)
     extracted = extract_metadata(text)
 
@@ -364,6 +375,18 @@ def ingest_syllabus():
         "subject_name": request.form.get("subject_name") or extracted.get("subject_name") or "",
         "extracted":    extracted # store for debugging
     }
+
+    # Store with extra metadata
+    extra_meta = {
+        "bos": SYLLABI[syllabus_id]["bos"],
+        "department": SYLLABI[syllabus_id]["department"],
+        "program": SYLLABI[syllabus_id]["program"],
+        "semester": SYLLABI[syllabus_id]["semester"],
+        "subject_code": SYLLABI[syllabus_id]["subject_code"],
+        "subject_name": SYLLABI[syllabus_id]["subject_name"],
+    }
+    vector_db.add_syllabus(syllabus_id, chunks, extra_meta=extra_meta)
+    SYLLABUS_CHUNKS[syllabus_id] = [c for c, _ in chunks]
 
     cos_stored = pcos_stored = 0
 
@@ -427,8 +450,6 @@ def ingest_from_url():
 
     syllabus_id = str(uuid.uuid4())
     chunks      = chunk_syllabus_with_modules(text)
-    vector_db.add_syllabus(syllabus_id, chunks)
-    SYLLABUS_CHUNKS[syllabus_id] = [c for c, _ in chunks]
 
     # Automatic Metadata Extraction
     extracted = extract_metadata(text)
@@ -442,6 +463,18 @@ def ingest_from_url():
         "subject_code": data.get("subject_code") or extracted.get("subject_code") or "",
         "subject_name": data.get("subject_name") or extracted.get("subject_name") or data.get("url", "")[:60],
     }
+
+    # Store with extra metadata
+    extra_meta = {
+        "bos": SYLLABI[syllabus_id]["bos"],
+        "department": SYLLABI[syllabus_id]["department"],
+        "program": SYLLABI[syllabus_id]["program"],
+        "semester": SYLLABI[syllabus_id]["semester"],
+        "subject_code": SYLLABI[syllabus_id]["subject_code"],
+        "subject_name": SYLLABI[syllabus_id]["subject_name"],
+    }
+    vector_db.add_syllabus(syllabus_id, chunks, extra_meta=extra_meta)
+    SYLLABUS_CHUNKS[syllabus_id] = [c for c, _ in chunks]
 
     cos_stored = pcos_stored = 0
 
@@ -532,10 +565,11 @@ def analyze():
     threshold   = float(data.get("threshold", 0.2))
     syllabus_id = data.get("syllabus_id", None)
 
-    if mode == "pdf":
+    if mode in ["pdf", "file", "document"]:
         if "file" not in files:
-            return jsonify({"error": "No question PDF uploaded"}), 400
-        question_text = extract_text_from_pdf(files["file"])
+            return jsonify({"error": "No question document uploaded"}), 400
+        file_obj = files["file"]
+        question_text = extract_text_from_file(file_obj, file_obj.filename)
     else:
         question_text = data.get("question", "").strip()
 
@@ -574,6 +608,8 @@ def analyze():
         # Dedup → reference filter → smart relevance filter
         top_chunks = _smart_filter_chunks(_dedup_chunks(top_chunks))
 
+        syllabus_meta = SYLLABI.get(syllabus_id, {}) if syllabus_id else {}
+
         analysis = analyze_question(
             question=q_text,
             similarity=similarity,
@@ -581,6 +617,7 @@ def analyze():
             top_chunks=top_chunks,
             co_mapper=co_mapper,
             syllabus_id=syllabus_id,
+            syllabus_meta=syllabus_meta,
         )
         
         processed_results.append(_build_result(q_text, similarity, top_chunks, analysis))

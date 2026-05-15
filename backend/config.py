@@ -11,8 +11,10 @@ LLM_RUNTIME = {
     "n_ctx": 2048,
     "temperature": 0.0,
     "max_tokens": 128,
-    # threads: tune to your CPU cores; e.g., 4
-    "n_threads": 4,
+    # 8 threads is ideal for your i5-11400H (12 logical cores)
+    "n_threads": 8,
+    # Offloading 20 layers to your GTX 1650 will drastically speed up validation
+    "n_gpu_layers": 20,
 }
 
 # Multi-module detection: minimum chunk similarity to count a module

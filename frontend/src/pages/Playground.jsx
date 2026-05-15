@@ -6,7 +6,7 @@ import AnalysisResultPanel from '../components/playground/AnalysisResultPanel';
 import { useApiClient } from '../hooks/useApiClient';
 
 function Playground() {
-  const { listSyllabi } = useApiClient();
+  const { listSyllabi, deleteSyllabus, purgeAll } = useApiClient();
   const [syllabusOptions, setSyllabusOptions] = useState([]);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [activeTab, setActiveTab] = useState('upload');
@@ -28,6 +28,27 @@ function Playground() {
   const handleSyllabusSuccess = (result) => {
     loadSyllabi();
     setActiveTab('analyze');
+  };
+
+  const handleDeleteSyllabus = async (syllabusId) => {
+    if (!window.confirm('Are you sure you want to delete this syllabus?')) return;
+    try {
+      await deleteSyllabus(syllabusId);
+      loadSyllabi();
+    } catch (error) {
+      alert('Failed to delete syllabus: ' + error.message);
+    }
+  };
+
+  const handlePurgeAll = async () => {
+    if (!window.confirm('WARNING: This will delete ALL syllabi and vector records. Are you sure?')) return;
+    try {
+      await purgeAll();
+      loadSyllabi();
+      setAnalysisResult(null);
+    } catch (error) {
+      alert('Failed to purge data: ' + error.message);
+    }
   };
 
   const handleAnalysisResult = (result) => {
@@ -95,20 +116,39 @@ function Playground() {
             {/* Syllabus List */}
             {syllabusOptions.length > 0 && (
               <div className="card mt-6">
-                <h3 className="text-lg font-semibold mb-3">Available Syllabi ({syllabusOptions.length})</h3>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold">Available Syllabi ({syllabusOptions.length})</h3>
+                  <button 
+                    onClick={handlePurgeAll}
+                    className="text-xs font-medium text-red-600 hover:text-red-800 bg-red-50 px-2 py-1 rounded border border-red-100 transition-colors"
+                  >
+                    Purge All
+                  </button>
+                </div>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {syllabusOptions.map((syllabus) => (
                     <div
                       key={syllabus.syllabus_id}
-                      className="p-3 bg-gray-50 rounded border border-gray-200 text-sm"
+                      className="p-3 bg-gray-50 rounded border border-gray-200 text-sm flex justify-between items-start group"
                     >
-                      <div className="font-medium text-gray-900">{syllabus.subject_name}</div>
-                      <div className="text-xs text-gray-600 mt-1">
-                        {syllabus.department} • {syllabus.program} • Semester {syllabus.semester}
+                      <div>
+                        <div className="font-medium text-gray-900">{syllabus.subject_name}</div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          {syllabus.department} • {syllabus.program} • Semester {syllabus.semester}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          ID: {syllabus.syllabus_id.substring(0, 8)}...
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        ID: {syllabus.syllabus_id.substring(0, 8)}...
-                      </div>
+                      <button 
+                        onClick={() => handleDeleteSyllabus(syllabus.syllabus_id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 transition-all"
+                        title="Delete Syllabus"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   ))}
                 </div>

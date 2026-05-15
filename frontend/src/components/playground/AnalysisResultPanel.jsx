@@ -62,6 +62,13 @@ const DIFFICULTY_COLOR = {
   Unknown: "bg-gray-50 text-gray-500 border-gray-300",
 };
 
+const MATCH_STRENGTH_COLOR = {
+  STRONG_MATCH: "bg-green-100 text-green-800 border-green-300",
+  PARTIAL_MATCH: "bg-yellow-100 text-yellow-800 border-yellow-300",
+  WEAK_MATCH: "bg-orange-100 text-orange-800 border-orange-300",
+  NO_MATCH: "bg-red-100 text-red-800 border-red-300",
+};
+
 function Badge({ label, colorClass, prefix }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${colorClass}`}>
@@ -81,12 +88,18 @@ function EnrichmentRow({ result }) {
   const modules = result.modules_detected;
   const co = result.mapped_co;
   const pco = result.mapped_pco;
+  const match_strength = result.match_strength;
 
   return (
     <div className="mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg space-y-3">
       <h4 className="text-sm font-semibold text-indigo-900">Curriculum Analysis</h4>
 
       <div className="flex flex-wrap gap-2 items-center">
+        {/* Match Strength */}
+        {match_strength && (
+          <Badge label={match_strength.replace('_', ' ')} colorClass={MATCH_STRENGTH_COLOR[match_strength] || MATCH_STRENGTH_COLOR.NO_MATCH} prefix="Match:" />
+        )}
+
         {/* Bloom — always shown */}
         <Badge label={bloom} colorClass={BLOOM_COLOR[bloom] || BLOOM_COLOR.Unknown} prefix="Bloom:" />
 
@@ -213,8 +226,16 @@ function BatchCard({ qres, idx }) {
       )}
 
       {/* Top chunks — deduplicated */}
-      {qres.top_chunks && qres.top_chunks.length > 0 && (
-        <ChunkList question={qres.question} chunks={qres.top_chunks} compact />
+      {qres.retrieval_status === "NO_MATCH" ? (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-700 font-medium text-center">
+            No sufficiently relevant syllabus content found.
+          </p>
+        </div>
+      ) : (
+        qres.top_chunks && qres.top_chunks.length > 0 && (
+          <ChunkList question={qres.question} chunks={qres.top_chunks} compact />
+        )
       )}
     </div>
   );
@@ -233,14 +254,37 @@ function AnalysisResultPanel({ result }) {
     );
   }
 
+  const handleDownload = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(result, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `analysis_${result.mode || 'result'}_${Date.now()}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.removeChild();
+  };
+
   // BATCH MODE
   if (result.mode === "batch" || Array.isArray(result.questions)) {
     return (
       <div className="card">
-        <h3 className="text-xl font-semibold mb-4">Batch Analysis Results</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Detected {result.questions.length} questions.
-        </p>
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="text-xl font-semibold">Batch Analysis Results</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Detected {result.questions.length} questions.
+            </p>
+          </div>
+          <button 
+            onClick={handleDownload}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition-all"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export JSON
+          </button>
+        </div>
         <div className="space-y-4">
           {result.questions.map((qres, idx) => (
             <BatchCard key={idx} qres={qres} idx={idx} />
@@ -253,7 +297,18 @@ function AnalysisResultPanel({ result }) {
   // SINGLE MODE
   return (
     <div className="card">
-      <h3 className="text-xl font-semibold mb-4">Analysis Results</h3>
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-xl font-semibold">Analysis Results</h3>
+        <button 
+          onClick={handleDownload}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition-all"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export JSON
+        </button>
+      </div>
 
       {/* Question */}
       {result.question && (
@@ -332,8 +387,16 @@ function AnalysisResultPanel({ result }) {
       )}
 
       {/* Retrieved Syllabus Chunks — deduplicated */}
-      {result.top_chunks && result.top_chunks.length > 0 && (
-        <ChunkList question={result.question} chunks={result.top_chunks} />
+      {result.retrieval_status === "NO_MATCH" ? (
+        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-700 font-medium text-center">
+            No sufficiently relevant syllabus content found.
+          </p>
+        </div>
+      ) : (
+        result.top_chunks && result.top_chunks.length > 0 && (
+          <ChunkList question={result.question} chunks={result.top_chunks} />
+        )
       )}
     </div>
   );

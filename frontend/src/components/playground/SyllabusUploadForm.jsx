@@ -257,7 +257,7 @@ function SyllabusUploadForm({ onSuccess }) {
 
             {inputMode === 'pdf' && (
               <div>
-                <input type="file" accept=".pdf" onChange={e => setPdfFile(e.target.files[0])} className="w-full" required />
+                <input type="file" accept=".pdf,.docx,.pptx" onChange={e => setPdfFile(e.target.files[0])} className="w-full" required />
                 {pdfFile && <p className="mt-1 text-sm text-gray-600">✓ {pdfFile.name}</p>}
               </div>
             )}

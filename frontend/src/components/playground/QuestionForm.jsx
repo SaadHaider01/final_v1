@@ -200,7 +200,7 @@ function QuestionForm({ onResult, syllabusOptions = [] }) {
         ) : (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Question PDF *</label>
-            <input type="file" accept=".pdf" onChange={e => setPdfFile(e.target.files[0])} className="w-full" required />
+            <input type="file" accept=".pdf,.docx,.pptx" onChange={e => setPdfFile(e.target.files[0])} className="w-full" required />
             {pdfFile && <p className="mt-2 text-sm text-gray-600">Selected: {pdfFile.name}</p>}
           </div>
         )}

@@ -81,6 +81,21 @@ export function useApiClient() {
     }
   };
 
+  const purgeAll = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post(`${API_BASE_URL}${API_ENDPOINTS.PURGE_ALL}`);
+      return response.data;
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'Failed to purge data';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // --------------------------------------------------
   // Upgrade B — URL-based ingestion
   // --------------------------------------------------
@@ -142,6 +157,7 @@ export function useApiClient() {
     analyzeQuestion,
     listSyllabi,
     deleteSyllabus,
+    purgeAll,
     ingestFromUrl,
     getBos,
     getDepartments,

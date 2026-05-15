@@ -11,4 +11,5 @@ export const API_ENDPOINTS = {
   SUBJECTS: '/subjects',
   // Upgrade B — URL ingestion
   INGEST_FROM_URL: '/ingest_from_url',
+  PURGE_ALL: '/purge_all',
 };

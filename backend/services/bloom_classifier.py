@@ -28,7 +28,7 @@ import re
 BLOOM_VERB_MAP = {
     "Remember": [
         "define", "list", "state", "recall", "name", "identify",
-        "label", "memorize", "recognize", "reproduce", "repeat",
+        "label", "memorize", "recognize", "reproduce", "repeat", "mention"
     ],
     "Understand": [
         "explain", "describe", "summarize", "classify", "interpret",
@@ -89,7 +89,7 @@ def _get_verb_compiled():
 
 _WH_PATTERNS = [
     # Evaluate / Analyze
-    (re.compile(r"^\s*(why|why\s+is|why\s+are|why\s+do|why\s+does|why\s+should)\b", re.I), "Evaluate"),
+    (re.compile(r"\b(why|why\s+is|why\s+are|why\s+do|why\s+does|why\s+should)\b", re.I), "Evaluate"),
     (re.compile(r"\b(advantage|disadvantage|benefit|drawback|limitation|trade.?off|pros?\s+and\s+cons?)\b", re.I), "Evaluate"),
 
     # Analyze
@@ -101,8 +101,8 @@ _WH_PATTERNS = [
     (re.compile(r"\b(brief(ly)?|short\s+note|outline|overview|concept\s+of)\b", re.I), "Understand"),
 
     # Remember — "What is X", "What are X", "When", "Who", "Where", "Which"
-    (re.compile(r"^\s*(what\s+is|what\s+are|what\s+was|what\s+were|what\s+do\s+you\s+mean)\b", re.I), "Remember"),
-    (re.compile(r"^\s*(who|when|where|which)\b", re.I), "Remember"),
+    (re.compile(r"\b(what\s+is|what\s+are|what\s+was|what\s+were|what\s+do\s+you\s+mean)\b", re.I), "Remember"),
+    (re.compile(r"\b(who|when|where|which)\b", re.I), "Remember"),
     (re.compile(r"\b(full\s+form|abbreviation|acronym|stand\s+for|meaning\s+of)\b", re.I), "Remember"),
 ]
 

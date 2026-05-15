@@ -42,14 +42,14 @@ _COURSE_META = re.compile(
     r"Name of the Course:|Course Code:|"
     r"Contacts:\s*\d+\s*L|"
     r"Hrs/Unit|Marks/Unit|"
-    r"Syllabus and Curricular Mapping|Effective from Acdemic Session|University Syllabus:"
+    r"Syllabus\s*and\s*Curricular\s*Mapping(?:forB\.Tech)?|Effective\s*from\s*Acdemic\s*Session|University\s*Syllabus:?"
     r")[^\n]*",
     re.IGNORECASE,
 )
 
 # University header/footer noise (e.g., Page: 116/123 Maulana Abul Kalam Azad University...)
 _UNIVERSITY_HEADER = re.compile(
-    r"(?:^|\n)\s*Page:\s*\d+/\d+\s+[^\n]*?(?:University\s*of\s*Technology|Syllabus)[^\n]*",
+    r"(?:^|\n)\s*(?:Page:\s*\d+/\d+\s+)?[^\n]*?(?:University\s*of\s*Technology|Formerly\s*West\s*Bengal|Syllabus\s*and\s*Curricular)[^\n]*",
     re.IGNORECASE,
 )
 
@@ -165,8 +165,8 @@ def _split_into_sections(text: str):
 
 # ── Topic-level splitting ─────────────────────────────────────────────────────
 
-# Detect numbered topic starts: "1.", "2.", "10."  at start-of-line or after newline
-_TOPIC_NUM = re.compile(r"(?:^|\n)\s*(\d{1,2})\.\s+")
+# Detect numbered topic starts: "1.", "2.", "10." or bare "1 ", "2 " at start-of-line
+_TOPIC_NUM = re.compile(r"(?:^|\n)\s*(\d{1,2})(?:\.|\s+(?=[A-Z]))\s*")
 
 
 def _split_section_into_topics(body: str, unit_label: str | None):

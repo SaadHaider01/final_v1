@@ -2,7 +2,8 @@ from sentence_transformers import SentenceTransformer
 
 class Embedder:
     def __init__(self):
-        self.model = SentenceTransformer("intfloat/multilingual-e5-base")
+        # Using 'cuda' to leverage the NVIDIA GTX 1650 for 5-10x faster embeddings
+        self.model = SentenceTransformer("intfloat/multilingual-e5-base", device='cuda')
 
     def embed(self, texts, task="query"):
         # E5 models require prefixing: 'query: ' for queries, 'passage: ' for documents

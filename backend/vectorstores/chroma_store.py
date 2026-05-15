@@ -54,10 +54,11 @@ class VectorStore:
             metadata={"hnsw:space": "cosine"}  # ensure cosine scoring
         )
 
-    def add_syllabus(self, syllabus_id, chunks):
+    def add_syllabus(self, syllabus_id, chunks, extra_meta=None):
         """
         chunks: list of str  OR  list of (text, module_label) tuples.
         Module labels are stored in ChromaDB metadata for later retrieval.
+        extra_meta: dict of additional metadata (e.g. department, subject_name) to store with every chunk.
         """
         # Normalise to (text, label) pairs
         pairs = []
@@ -71,10 +72,12 @@ class VectorStore:
         embeddings = self.embed_fn(texts, task="passage")
 
         ids       = [f"{syllabus_id}_{i}" for i in range(len(texts))]
-        metadatas = [
-            {"syllabus_id": syllabus_id, "chunk": t, "module": m or ""}
-            for t, m in pairs
-        ]
+        metadatas = []
+        for t, m in pairs:
+            meta = {"syllabus_id": syllabus_id, "chunk": t, "module": m or ""}
+            if extra_meta:
+                meta.update(extra_meta)
+            metadatas.append(meta)
 
         self.collection.add(
             ids=ids,
@@ -92,12 +95,14 @@ class VectorStore:
             print(f"Error deleting syllabus {syllabus_id}: {e}")
             return False
 
-    def query(self, query_text, k=3, syllabus_id=None):
+    def query(self, query_text, k=3, syllabus_id=None, metadata_filter=None):
         query_embedding = self.embed_fn([query_text], task="query")
 
         where_clause = None
         if syllabus_id:
             where_clause = {"syllabus_id": syllabus_id}
+        elif metadata_filter:
+            where_clause = metadata_filter
 
         result = self.collection.query(
             query_embeddings=query_embedding,
