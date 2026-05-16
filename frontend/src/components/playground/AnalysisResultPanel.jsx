@@ -63,10 +63,16 @@ const DIFFICULTY_COLOR = {
 };
 
 const MATCH_STRENGTH_COLOR = {
-  STRONG_MATCH: "bg-green-100 text-green-800 border-green-300",
+  STRONG_MATCH:  "bg-green-100 text-green-800 border-green-300",
   PARTIAL_MATCH: "bg-yellow-100 text-yellow-800 border-yellow-300",
-  WEAK_MATCH: "bg-orange-100 text-orange-800 border-orange-300",
-  NO_MATCH: "bg-red-100 text-red-800 border-red-300",
+  WEAK_MATCH:    "bg-orange-100 text-orange-800 border-orange-300",
+  NO_MATCH:      "bg-red-100 text-red-800 border-red-300",
+};
+
+const MATCH_TYPE_COLOR = {
+  DIRECT_SUBJECT_MATCH:    "bg-emerald-100 text-emerald-800 border-emerald-300",
+  RELATED_CURRICULUM_MATCH: "bg-sky-100 text-sky-800 border-sky-300",
+  OUT_OF_CURRICULUM:       "bg-red-100 text-red-800 border-red-300",
 };
 
 function Badge({ label, colorClass, prefix }) {
@@ -89,15 +95,25 @@ function EnrichmentRow({ result }) {
   const co = result.mapped_co;
   const pco = result.mapped_pco;
   const match_strength = result.match_strength;
+  const match_type = result.match_type;
 
   return (
     <div className="mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg space-y-3">
       <h4 className="text-sm font-semibold text-indigo-900">Curriculum Analysis</h4>
 
       <div className="flex flex-wrap gap-2 items-center">
+        {/* Match Type — primary indicator */}
+        {match_type && (
+          <Badge
+            label={match_type.replace(/_/g, ' ')}
+            colorClass={MATCH_TYPE_COLOR[match_type] || MATCH_TYPE_COLOR.OUT_OF_CURRICULUM}
+            prefix="Type:"
+          />
+        )}
+
         {/* Match Strength */}
         {match_strength && (
-          <Badge label={match_strength.replace('_', ' ')} colorClass={MATCH_STRENGTH_COLOR[match_strength] || MATCH_STRENGTH_COLOR.NO_MATCH} prefix="Match:" />
+          <Badge label={match_strength.replace(/_/g, ' ')} colorClass={MATCH_STRENGTH_COLOR[match_strength] || MATCH_STRENGTH_COLOR.NO_MATCH} prefix="Strength:" />
         )}
 
         {/* Bloom — always shown */}

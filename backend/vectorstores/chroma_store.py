@@ -86,6 +86,20 @@ class VectorStore:
             documents=texts
         )
 
+    def exists(self, syllabus_id: str) -> bool:
+        """
+        Return True if any chunks with this syllabus_id are already stored.
+        Used to prevent duplicate embeddings during selective ingestion.
+        """
+        try:
+            result = self.collection.get(
+                where={"syllabus_id": syllabus_id},
+                limit=1,
+            )
+            return bool(result and result.get("ids"))
+        except Exception:
+            return False
+
     def delete_syllabus(self, syllabus_id):
         """Remove all chunks belonging to a given syllabus_id from the collection."""
         try:
@@ -95,12 +109,28 @@ class VectorStore:
             print(f"Error deleting syllabus {syllabus_id}: {e}")
             return False
 
+    def reset_collection(self):
+        """
+        Wipe ALL vectors from the collection.
+        Safer than deleting per-syllabus when data is badly polluted.
+        """
+        try:
+            all_data = self.collection.get()
+            if all_data and all_data.get("ids"):
+                self.collection.delete(ids=all_data["ids"])
+                print(f"[Vector DB] Reset: removed {len(all_data['ids'])} vectors.")
+            return True
+        except Exception as e:
+            print(f"[Vector DB] Reset error: {e}")
+            return False
+
     def query(self, query_text, k=3, syllabus_id=None, metadata_filter=None):
         query_embedding = self.embed_fn([query_text], task="query")
 
         where_clause = None
         if syllabus_id:
             where_clause = {"syllabus_id": syllabus_id}
+            print(f"[Vector Retrieval] syllabus_id={syllabus_id} | k={k}")
         elif metadata_filter:
             where_clause = metadata_filter
 
@@ -109,4 +139,8 @@ class VectorStore:
             n_results=k,
             where=where_clause
         )
+        
+        # Log filtered chunk count
+        docs = result.get("documents") or [[]]
+        print(f"[Vector Retrieval] filtered_chunks={len(docs[0]) if docs else 0}")
         return result

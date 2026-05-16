@@ -13,7 +13,9 @@ from models.embedder import Embedder
 from processors.document_reader import extract_text_from_file
 from processors.metadata_extractor import extract_metadata # Added
 from processors.text_chunker import chunk_syllabus, chunk_syllabus_with_modules
+from processors.curriculum_segmenter import segment_curriculum
 from vectorstores.chroma_store import VectorStore
+from services.chunk_cleaner import clean_retrieved_chunks
 
 from services.question_analyzer import analyze_question
 from services.co_mapper import CoMapper            # Feature 3
@@ -30,6 +32,7 @@ co_mapper  = CoMapper(embed_fn=embedder.embed)     # Feature 3 — shares same e
 
 SYLLABI         = {}
 SYLLABUS_CHUNKS = {}
+PARSED_SEGMENTS = {}  # Temporary store: parse_id → list of segment dicts (not yet embedded)
 
 # --------------------------------------------------
 # Helpers
@@ -274,9 +277,10 @@ def _build_result(q_text, similarity, top_chunks, analysis):
         "is_in_syllabus":    analysis["is_in_syllabus"],
         "gatekeeper_passed": analysis["gatekeeper_passed"],
         "reason":            analysis["reason"],
-        # ---- new fields ----
+        # ---- retrieval fields ----
         "retrieval_status":  analysis.get("retrieval_status", "MATCH_FOUND"),
         "match_strength":    analysis.get("match_strength", "WEAK_MATCH"),
+        "match_type":        analysis.get("match_type", "OUT_OF_CURRICULUM"),
         "modules_detected":  analysis["modules_detected"],
         "bloom_level":       analysis["bloom_level"],
         "difficulty":        analysis["difficulty"],
@@ -360,59 +364,82 @@ def ingest_syllabus():
         if not text.strip():
             return jsonify({"error": "Empty syllabus text"}), 400
 
-    chunks = chunk_syllabus_with_modules(text)
+    segments = segment_curriculum(text)
     
-    # Automatic Metadata Extraction (Feature: Academic Context)
-    extracted = extract_metadata(text)
+    # Fallback if no segments detected
+    if not segments:
+        extracted = extract_metadata(text)
+        segments = [{
+            "department": request.form.get("department") or extracted.get("department") or "",
+            "semester": request.form.get("semester") or extracted.get("semester") or "",
+            "subject_code": request.form.get("subject_code") or extracted.get("subject_code") or "",
+            "subject_name": request.form.get("subject_name") or extracted.get("subject_name") or "Unknown Subject",
+            "text": text
+        }]
 
-    SYLLABI[syllabus_id] = {
-        "syllabus_id":  syllabus_id,
-        "bos":          request.form.get("bos") or extracted.get("bos") or "",
-        "department":   request.form.get("department") or extracted.get("department") or "",
-        "program":      request.form.get("program") or extracted.get("program") or "",
-        "semester":     request.form.get("semester") or extracted.get("semester") or "",
-        "subject_code": request.form.get("subject_code") or extracted.get("subject_code") or "",
-        "subject_name": request.form.get("subject_name") or extracted.get("subject_name") or "",
-        "extracted":    extracted # store for debugging
-    }
-
-    # Store with extra metadata
-    extra_meta = {
-        "bos": SYLLABI[syllabus_id]["bos"],
-        "department": SYLLABI[syllabus_id]["department"],
-        "program": SYLLABI[syllabus_id]["program"],
-        "semester": SYLLABI[syllabus_id]["semester"],
-        "subject_code": SYLLABI[syllabus_id]["subject_code"],
-        "subject_name": SYLLABI[syllabus_id]["subject_name"],
-    }
-    vector_db.add_syllabus(syllabus_id, chunks, extra_meta=extra_meta)
-    SYLLABUS_CHUNKS[syllabus_id] = [c for c, _ in chunks]
-
+    # We might have multiple subjects in one PDF, so we generate a parent syllabus_id
+    # but store each segment separately, or treat each segment as its own syllabus
+    # Let's treat each segment as its own "syllabus" for the frontend to select from.
+    bos_val = request.form.get("bos") or extract_metadata(text).get("bos") or ""
+    program_val = request.form.get("program") or extract_metadata(text).get("program") or ""
+    
     cos_stored = pcos_stored = 0
-
-    # Feature 3 — optional CO ingestion
     cos_raw = request.form.get("cos", "")
-    if cos_raw:
-        try:
-            cos = json.loads(cos_raw)
-            if isinstance(cos, list) and cos:
-                cos_stored = co_mapper.add_cos(syllabus_id, cos)
-        except (json.JSONDecodeError, KeyError):
-            pass
-
-    # Feature 3B — optional PCO ingestion
     pcos_raw = request.form.get("pcos", "")
-    if pcos_raw:
-        try:
-            pcos = json.loads(pcos_raw)
-            if isinstance(pcos, list) and pcos:
-                pcos_stored = co_mapper.add_pcos(syllabus_id, pcos)
-        except (json.JSONDecodeError, KeyError):
-            pass
+    
+    segment_ids = []
+    
+    for seg in segments:
+        seg_id = str(uuid.uuid4())
+        segment_ids.append(seg_id)
+        
+        # Clean text and chunk, then filter out references before embedding
+        raw_seg_chunks = chunk_syllabus_with_modules(seg["text"])
+        seg_chunks = [c for c in raw_seg_chunks if not _is_reference_entry(c[0])]
+        
+        SYLLABI[seg_id] = {
+            "syllabus_id":  seg_id,
+            "bos":          bos_val,
+            "department":   seg["department"],
+            "program":      program_val,
+            "semester":     seg["semester"],
+            "subject_code": seg["subject_code"],
+            "subject_name": seg["subject_name"],
+            "extracted":    seg # store for debugging
+        }
+
+        # Store with extra metadata
+        extra_meta = {
+            "bos": bos_val,
+            "department": seg["department"],
+            "program": program_val,
+            "semester": seg["semester"],
+            "subject_code": seg["subject_code"],
+            "subject_name": seg["subject_name"],
+        }
+        vector_db.add_syllabus(seg_id, seg_chunks, extra_meta=extra_meta)
+        SYLLABUS_CHUNKS[seg_id] = [c for c, _ in seg_chunks]
+
+        # Feature 3 — optional CO/PCO ingestion (applied to all segments for now)
+        if cos_raw:
+            try:
+                cos = json.loads(cos_raw)
+                if isinstance(cos, list) and cos:
+                    cos_stored += co_mapper.add_cos(seg_id, cos)
+            except (json.JSONDecodeError, KeyError):
+                pass
+
+        if pcos_raw:
+            try:
+                pcos = json.loads(pcos_raw)
+                if isinstance(pcos, list) and pcos:
+                    pcos_stored += co_mapper.add_pcos(seg_id, pcos)
+            except (json.JSONDecodeError, KeyError):
+                pass
 
     return jsonify({
         "success":     True,
-        "syllabus_id": syllabus_id,
+        "syllabus_ids": segment_ids,
         "cos_stored":  cos_stored,
         "pcos_stored": pcos_stored,
     })
@@ -449,56 +476,74 @@ def ingest_from_url():
         return jsonify({"error": str(e)}), 422
 
     syllabus_id = str(uuid.uuid4())
-    chunks      = chunk_syllabus_with_modules(text)
+    segments = segment_curriculum(text)
+    
+    if not segments:
+        extracted = extract_metadata(text)
+        segments = [{
+            "department": data.get("department") or extracted.get("department") or "",
+            "semester": data.get("semester") or extracted.get("semester") or "",
+            "subject_code": data.get("subject_code") or extracted.get("subject_code") or "",
+            "subject_name": data.get("subject_name") or extracted.get("subject_name") or data.get("url", "")[:60],
+            "text": text
+        }]
 
-    # Automatic Metadata Extraction
-    extracted = extract_metadata(text)
-
-    SYLLABI[syllabus_id] = {
-        "syllabus_id":  syllabus_id,
-        "bos":          data.get("bos") or extracted.get("bos") or "",
-        "department":   data.get("department") or extracted.get("department") or "",
-        "program":      data.get("program") or extracted.get("program") or "",
-        "semester":     data.get("semester") or extracted.get("semester") or "",
-        "subject_code": data.get("subject_code") or extracted.get("subject_code") or "",
-        "subject_name": data.get("subject_name") or extracted.get("subject_name") or data.get("url", "")[:60],
-    }
-
-    # Store with extra metadata
-    extra_meta = {
-        "bos": SYLLABI[syllabus_id]["bos"],
-        "department": SYLLABI[syllabus_id]["department"],
-        "program": SYLLABI[syllabus_id]["program"],
-        "semester": SYLLABI[syllabus_id]["semester"],
-        "subject_code": SYLLABI[syllabus_id]["subject_code"],
-        "subject_name": SYLLABI[syllabus_id]["subject_name"],
-    }
-    vector_db.add_syllabus(syllabus_id, chunks, extra_meta=extra_meta)
-    SYLLABUS_CHUNKS[syllabus_id] = [c for c, _ in chunks]
-
+    bos_val = data.get("bos") or extract_metadata(text).get("bos") or ""
+    program_val = data.get("program") or extract_metadata(text).get("program") or ""
+    
     cos_stored = pcos_stored = 0
-
     cos_raw = data.get("cos", "")
-    if cos_raw:
-        try:
-            cos = json.loads(cos_raw) if isinstance(cos_raw, str) else cos_raw
-            if isinstance(cos, list) and cos:
-                cos_stored = co_mapper.add_cos(syllabus_id, cos)
-        except (json.JSONDecodeError, KeyError):
-            pass
-
     pcos_raw = data.get("pcos", "")
-    if pcos_raw:
-        try:
-            pcos = json.loads(pcos_raw) if isinstance(pcos_raw, str) else pcos_raw
-            if isinstance(pcos, list) and pcos:
-                pcos_stored = co_mapper.add_pcos(syllabus_id, pcos)
-        except (json.JSONDecodeError, KeyError):
-            pass
+
+    segment_ids = []
+
+    for seg in segments:
+        seg_id = str(uuid.uuid4())
+        segment_ids.append(seg_id)
+        
+        raw_seg_chunks = chunk_syllabus_with_modules(seg["text"])
+        seg_chunks = [c for c in raw_seg_chunks if not _is_reference_entry(c[0])]
+
+        SYLLABI[seg_id] = {
+            "syllabus_id":  seg_id,
+            "bos":          bos_val,
+            "department":   seg["department"],
+            "program":      program_val,
+            "semester":     seg["semester"],
+            "subject_code": seg["subject_code"],
+            "subject_name": seg["subject_name"],
+        }
+
+        extra_meta = {
+            "bos": bos_val,
+            "department": seg["department"],
+            "program": program_val,
+            "semester": seg["semester"],
+            "subject_code": seg["subject_code"],
+            "subject_name": seg["subject_name"],
+        }
+        vector_db.add_syllabus(seg_id, seg_chunks, extra_meta=extra_meta)
+        SYLLABUS_CHUNKS[seg_id] = [c for c, _ in seg_chunks]
+
+        if cos_raw:
+            try:
+                cos = json.loads(cos_raw) if isinstance(cos_raw, str) else cos_raw
+                if isinstance(cos, list) and cos:
+                    cos_stored += co_mapper.add_cos(seg_id, cos)
+            except (json.JSONDecodeError, KeyError):
+                pass
+
+        if pcos_raw:
+            try:
+                pcos = json.loads(pcos_raw) if isinstance(pcos_raw, str) else pcos_raw
+                if isinstance(pcos, list) and pcos:
+                    pcos_stored += co_mapper.add_pcos(seg_id, pcos)
+            except (json.JSONDecodeError, KeyError):
+                pass
 
     return jsonify({
         "success":     True,
-        "syllabus_id": syllabus_id,
+        "syllabus_ids": segment_ids,
         "cos_stored":  cos_stored,
         "pcos_stored": pcos_stored,
         "source":      url,
@@ -553,6 +598,65 @@ def purge_all():
 
 
 
+@app.route("/detect_subject", methods=["POST", "OPTIONS"])
+def detect_subject():
+    if request.method == "OPTIONS":
+        return ("", 200)
+
+    data  = request.form if request.form else request.get_json(silent=True) or {}
+    files = request.files if request.form else {}
+
+    mode = data.get("mode", "text")
+
+    if mode in ["pdf", "file", "document"]:
+        if "file" not in files:
+            return jsonify({"error": "No document uploaded"}), 400
+        file_obj = files["file"]
+        text = extract_text_from_file(file_obj, file_obj.filename)
+    else:
+        text = data.get("text", "").strip()
+
+    if not text:
+        return jsonify({"error": "Empty text"}), 400
+
+    extracted = extract_metadata(text)
+    
+    # ── Semantic Subject Detection (Step 7) ──────────────────────────────────
+    # If regex didn't find a code, or to confirm, try semantic matching
+    # against ingested content.
+    try:
+        # Use first 1000 chars for semantic detection speed
+        search_text = text[:1000]
+        results = vector_db.query(search_text, k=1)
+        
+        metas = results.get("metadatas")
+        dists = results.get("distances")
+        
+        if metas and metas[0] and dists and dists[0]:
+            top_meta = metas[0][0]
+            # ChromaDB distance: 0.0 is perfect match. For cosine, distance is 1-sim.
+            # Convert to similarity: sim = 1 - (dist / 2) if using cosine in Chroma
+            # Or just check distance. Typical "good" distance is < 0.6 for e5 models.
+            dist = dists[0][0]
+            
+            # If distance is low enough, we consider it a semantic match
+            if dist < 0.6:
+                # Prioritise semantic match for syllabus context selection
+                extracted["syllabus_id"]   = top_meta.get("syllabus_id")
+                extracted["subject_code"] = top_meta.get("subject_code")
+                extracted["subject_name"] = top_meta.get("subject_name")
+                extracted["department"]   = top_meta.get("department")
+                extracted["semester"]     = top_meta.get("semester")
+                
+                print(f"[Detect] Semantic match found: {extracted['syllabus_id']} (dist={dist:.3f})")
+    except Exception as e:
+        print(f"[Detect] Semantic detection error: {e}")
+    
+    return jsonify({
+        "success": True,
+        "metadata": extracted
+    })
+
 @app.route("/analyze_question", methods=["POST", "OPTIONS"])
 def analyze():
     if request.method == "OPTIONS":
@@ -605,8 +709,9 @@ def analyze():
                     ) if isinstance(meta, dict) else _extract_module(doc),
                 })
 
-        # Dedup → reference filter → smart relevance filter
+        # Dedup → reference filter → smart relevance filter → chunk cleaner
         top_chunks = _smart_filter_chunks(_dedup_chunks(top_chunks))
+        top_chunks = clean_retrieved_chunks(top_chunks)  # post-retrieval noise gate
 
         syllabus_meta = SYLLABI.get(syllabus_id, {}) if syllabus_id else {}
 
@@ -658,6 +763,265 @@ def get_subjects():
         if s.get("subject_name") and (not sem_filter or s.get("semester") == sem_filter)
     })
     return jsonify(subjects)
+
+
+# --------------------------------------------------
+# NEW: Curriculum-driven routes
+# --------------------------------------------------
+
+@app.route("/parse_curriculum", methods=["POST"])
+def parse_curriculum():
+    """
+    Step 1 of the new two-phase ingestion flow.
+
+    Parse PDF/URL/text and return detected syllabus blocks WITHOUT embedding.
+    Frontend displays the list so user can select which subjects to ingest.
+
+    Form fields:
+        mode   = "pdf" | "url" | "text"
+        file   (if mode=pdf)
+        url    (if mode=url) — JSON body
+        text   (if mode=text)
+
+    Returns:
+        {
+          "parse_id": "<uuid>",
+          "segments": [
+            {
+              "syllabus_id":   "IT-VIII-PEC-IT801B",
+              "department":    "Information Technology",
+              "semester":      "VIII",
+              "subject_name":  "Cryptography and Network Security",
+              "subject_code":  "IT801B",
+              "elective_type": "PEC",
+              "modules":       ["Unit I: ...", ...],
+              "text_preview":  "First 200 chars..."
+            }, ...
+          ]
+        }
+    """
+    mode = request.form.get("mode") or (request.get_json(silent=True) or {}).get("mode", "pdf")
+
+    if mode in ["pdf", "file", "document"]:
+        if "file" not in request.files:
+            return jsonify({"error": "No document uploaded"}), 400
+        file_obj = request.files["file"]
+        text = extract_text_from_file(file_obj, file_obj.filename)
+    elif mode == "url":
+        data = request.get_json(silent=True) or {}
+        url = data.get("url", "").strip()
+        if not url:
+            return jsonify({"error": "url is required"}), 400
+        try:
+            text = _fetch_text_from_url(url)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 422
+    else:
+        text = request.form.get("text", "")
+        if not text.strip():
+            return jsonify({"error": "Empty text"}), 400
+
+    segments = segment_curriculum(text)
+    print(f"[Curriculum Parser] Detected subjects={[s['subject_name'] for s in segments]}")
+
+    if not segments:
+        return jsonify({
+            "parse_id": None,
+            "segments": [],
+            "message": "No structured curriculum detected. Use direct ingest for single-subject text."
+        })
+
+    # Store parsed segments temporarily (keyed by parse_id)
+    parse_id = str(uuid.uuid4())
+    PARSED_SEGMENTS[parse_id] = segments
+
+    # Return lightweight preview (no full text sent to frontend)
+    preview = []
+    for seg in segments:
+        preview.append({
+            "syllabus_id":   seg["syllabus_id"],
+            "department":    seg["department"],
+            "semester":      seg["semester"],
+            "subject_name":  seg["subject_name"],
+            "subject_code":  seg["subject_code"],
+            "elective_type": seg["elective_type"],
+            "modules":       seg["modules"],
+            "text_preview":  seg["syllabus_text"][:200] + "..." if len(seg["syllabus_text"]) > 200 else seg["syllabus_text"],
+            "already_ingested": vector_db.exists(seg["syllabus_id"]),
+        })
+
+    return jsonify({
+        "parse_id": parse_id,
+        "segments": preview,
+    })
+
+
+@app.route("/ingest_selected", methods=["POST"])
+def ingest_selected():
+    """
+    Step 2 of the new two-phase ingestion flow.
+
+    Embed ONLY the user-selected subjects from a prior /parse_curriculum call.
+
+    JSON body:
+        {
+          "parse_id":      "<uuid from /parse_curriculum>",
+          "syllabus_ids":  ["IT-VIII-PEC-IT801B", ...],  // subset to ingest
+          "ingest_all":    false   // if true, ignores syllabus_ids and ingests all
+        }
+
+    Returns:
+        {
+          "ingested":           ["IT-VIII-PEC-IT801B", ...],
+          "skipped_duplicates": ["IT-VII-CORE-IT701", ...]
+        }
+    """
+    data = request.get_json(silent=True) or {}
+    parse_id = data.get("parse_id", "")
+    selected_ids = data.get("syllabus_ids", [])
+    ingest_all = data.get("ingest_all", False)
+
+    if not parse_id or parse_id not in PARSED_SEGMENTS:
+        return jsonify({"error": "Invalid or expired parse_id. Please re-upload the curriculum."}), 400
+
+    segments = PARSED_SEGMENTS[parse_id]
+
+    # Filter to selected subjects (or all)
+    if ingest_all:
+        to_ingest = segments
+    else:
+        if not selected_ids:
+            return jsonify({"error": "No syllabus_ids provided"}), 400
+        to_ingest = [s for s in segments if s["syllabus_id"] in selected_ids]
+
+    ingested = []
+    skipped  = []
+    total_chunks = 0
+
+    for seg in to_ingest:
+        sid = seg["syllabus_id"]
+
+        # Duplicate prevention
+        if vector_db.exists(sid):
+            print(f"[Ingestion] Skipping duplicate: {sid}")
+            # Still register in SYLLABI if not already there
+            if sid not in SYLLABI:
+                SYLLABI[sid] = {
+                    "syllabus_id":   sid,
+                    "department":    seg["department"],
+                    "semester":      seg["semester"],
+                    "subject_code":  seg["subject_code"],
+                    "subject_name":  seg["subject_name"],
+                    "elective_type": seg["elective_type"],
+                    "modules":       seg["modules"],
+                    "bos":           "",
+                    "program":       "",
+                }
+            skipped.append(sid)
+            continue
+
+        # Chunk → filter references → embed
+        raw_chunks = chunk_syllabus_with_modules(seg["syllabus_text"])
+        clean_chunks = [c for c in raw_chunks if not _is_reference_entry(c[0])]
+
+        if not clean_chunks:
+            print(f"[Ingestion] No valid chunks for {sid} — skipping.")
+            skipped.append(sid)
+            continue
+
+        extra_meta = {
+            "department":    seg["department"],
+            "semester":      seg["semester"],
+            "subject_code":  seg["subject_code"],
+            "subject_name":  seg["subject_name"],
+            "elective_type": seg["elective_type"],
+        }
+        vector_db.add_syllabus(sid, clean_chunks, extra_meta=extra_meta)
+
+        SYLLABI[sid] = {
+            "syllabus_id":   sid,
+            "department":    seg["department"],
+            "semester":      seg["semester"],
+            "subject_code":  seg["subject_code"],
+            "subject_name":  seg["subject_name"],
+            "elective_type": seg["elective_type"],
+            "modules":       seg["modules"],
+            "bos":           "",
+            "program":       "",
+        }
+        SYLLABUS_CHUNKS[sid] = [c for c, _ in clean_chunks]
+        ingested.append(sid)
+        total_chunks += len(clean_chunks)
+        print(f"[Ingestion] Ingested: {sid} ({len(clean_chunks)} chunks)")
+
+    # Clean up parsed segments cache
+    PARSED_SEGMENTS.pop(parse_id, None)
+
+    return jsonify({
+        "success":            True,
+        "ingested":           ingested,
+        "skipped_duplicates": skipped,
+        "chunks_generated":   total_chunks,
+    })
+
+
+@app.route("/curriculum_hierarchy", methods=["GET"])
+def curriculum_hierarchy():
+    """
+    Return the dynamic curriculum hierarchy derived from all ingested syllabi.
+
+    Response structure:
+        {
+          "departments": {
+            "Information Technology": {
+              "VIII": [
+                {
+                  "syllabus_id":  "IT-VIII-PEC-IT801B",
+                  "subject_name": "Cryptography and Network Security",
+                  "subject_code": "IT801B",
+                  "elective_type": "PEC"
+                }, ...
+              ]
+            }
+          }
+        }
+
+    This is the ONLY data source the frontend needs to build its cascading
+    Department → Semester → Subject dropdowns without any static hardcoded data.
+    """
+    hierarchy = {}
+    for s in SYLLABI.values():
+        dept = s.get("department") or "Unknown"
+        sem  = s.get("semester")  or "Unknown"
+        if dept not in hierarchy:
+            hierarchy[dept] = {}
+        if sem not in hierarchy[dept]:
+            hierarchy[dept][sem] = []
+        hierarchy[dept][sem].append({
+            "syllabus_id":   s["syllabus_id"],
+            "subject_name":  s.get("subject_name", "Unknown Subject"),
+            "subject_code":  s.get("subject_code", ""),
+            "elective_type": s.get("elective_type", "CORE"),
+        })
+    return jsonify({"departments": hierarchy})
+
+
+@app.route("/reset_vector_db", methods=["POST"])
+def reset_vector_db():
+    """
+    Safely wipe ALL vectors from ChromaDB and clear in-memory SYLLABI cache.
+    Use this when the vector DB is polluted with bad embeddings.
+    """
+    vector_db.reset_collection()
+    count = len(SYLLABI)
+    SYLLABI.clear()
+    SYLLABUS_CHUNKS.clear()
+    PARSED_SEGMENTS.clear()
+    return jsonify({
+        "success":         True,
+        "syllabi_cleared": count,
+        "message":         "Vector DB reset. All embeddings removed. Please re-ingest your curriculum.",
+    })
 
 
 # --------------------------------------------------

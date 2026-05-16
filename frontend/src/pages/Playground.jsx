@@ -6,7 +6,7 @@ import AnalysisResultPanel from '../components/playground/AnalysisResultPanel';
 import { useApiClient } from '../hooks/useApiClient';
 
 function Playground() {
-  const { listSyllabi, deleteSyllabus, purgeAll } = useApiClient();
+  const { listSyllabi, deleteSyllabus, purgeAll, resetVectorDb } = useApiClient();
   const [syllabusOptions, setSyllabusOptions] = useState([]);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [activeTab, setActiveTab] = useState('upload');
@@ -51,6 +51,18 @@ function Playground() {
     }
   };
 
+  const handleResetDb = async () => {
+    if (!window.confirm('RESET: Wipe ChromaDB vectors AND all SYLLABI from memory? This is for fixing polluted data.')) return;
+    try {
+      await resetVectorDb();
+      loadSyllabi();
+      setAnalysisResult(null);
+      alert('Vector DB reset. Please re-ingest your curriculum.');
+    } catch (error) {
+      alert('Reset failed: ' + error.message);
+    }
+  };
+
   const handleAnalysisResult = (result) => {
     setAnalysisResult(result);
   };
@@ -67,10 +79,10 @@ function Playground() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
           <h3 className="font-semibold text-blue-900 mb-2">How to Use</h3>
           <ol className="list-decimal list-inside space-y-1 text-blue-800 text-sm">
-            <li>First, ingest a syllabus by uploading a PDF or pasting text</li>
-            <li>Then, enter a question and select which syllabus to analyze against</li>
-            <li>Adjust the similarity threshold to control gatekeeper behavior</li>
-            <li>Click "Analyze Question" to see the system's decision and reasoning</li>
+            <li>Upload a full curriculum PDF → system auto-detects all subjects</li>
+            <li>Select which subjects to ingest (or ingest all)</li>
+            <li>Switch to "Analyze" tab → choose Department → Semester → Subject</li>
+            <li>Enter an exam question and click "Analyze Question"</li>
           </ol>
         </div>
 
@@ -118,12 +130,21 @@ function Playground() {
               <div className="card mt-6">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-lg font-semibold">Available Syllabi ({syllabusOptions.length})</h3>
-                  <button 
-                    onClick={handlePurgeAll}
-                    className="text-xs font-medium text-red-600 hover:text-red-800 bg-red-50 px-2 py-1 rounded border border-red-100 transition-colors"
-                  >
-                    Purge All
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={handleResetDb}
+                      className="text-xs font-medium text-orange-600 hover:text-orange-800 bg-orange-50 px-2 py-1 rounded border border-orange-100 transition-colors"
+                      title="Wipe all vectors from ChromaDB (use when data is polluted)"
+                    >
+                      Reset DB
+                    </button>
+                    <button 
+                      onClick={handlePurgeAll}
+                      className="text-xs font-medium text-red-600 hover:text-red-800 bg-red-50 px-2 py-1 rounded border border-red-100 transition-colors"
+                    >
+                      Purge All
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {syllabusOptions.map((syllabus) => (

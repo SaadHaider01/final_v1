@@ -48,6 +48,26 @@ export function useApiClient() {
     }
   };
 
+  const detectSubject = async (payload) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const isFormData = payload instanceof FormData;
+      const response = await axios.post(
+        `${API_BASE_URL}${API_ENDPOINTS.DETECT_SUBJECT}`,
+        payload,
+        isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
+      );
+      return response.data;
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'Failed to detect subject';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const listSyllabi = async () => {
     setLoading(true);
     setError(null);
@@ -119,15 +139,80 @@ export function useApiClient() {
   };
 
   // --------------------------------------------------
-  // Feature 4 — BOS endpoints
+  // Curriculum-driven architecture (new)
+  // --------------------------------------------------
+
+  const parseCurriculum = async (formDataOrPayload) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const isFormData = formDataOrPayload instanceof FormData;
+      const response = await axios.post(
+        `${API_BASE_URL}${API_ENDPOINTS.PARSE_CURRICULUM}`,
+        formDataOrPayload,
+        isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
+      );
+      return response.data;
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'Failed to parse curriculum';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const ingestSelected = async (payload) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}${API_ENDPOINTS.INGEST_SELECTED}`,
+        payload,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      return response.data;
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'Failed to ingest selected subjects';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCurriculumHierarchy = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}${API_ENDPOINTS.CURRICULUM_HIERARCHY}`);
+      return response.data;
+    } catch {
+      return { departments: {} };
+    }
+  };
+
+  const resetVectorDb = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post(`${API_BASE_URL}${API_ENDPOINTS.RESET_VECTOR_DB}`);
+      return response.data;
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'Failed to reset vector DB';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --------------------------------------------------
+  // Legacy BOS endpoints (kept for backward compatibility)
   // --------------------------------------------------
   const getBos = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}${API_ENDPOINTS.BOS}`);
       return response.data;
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   };
 
   const getDepartments = async (bos = '') => {
@@ -135,9 +220,7 @@ export function useApiClient() {
       const params = bos ? { bos } : {};
       const response = await axios.get(`${API_BASE_URL}${API_ENDPOINTS.DEPARTMENTS}`, { params });
       return response.data;
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   };
 
   const getSubjects = async (semester = '') => {
@@ -145,9 +228,7 @@ export function useApiClient() {
       const params = semester ? { semester } : {};
       const response = await axios.get(`${API_BASE_URL}${API_ENDPOINTS.SUBJECTS}`, { params });
       return response.data;
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   };
 
   return {
@@ -162,5 +243,11 @@ export function useApiClient() {
     getBos,
     getDepartments,
     getSubjects,
+    detectSubject,
+    // Curriculum-driven
+    parseCurriculum,
+    ingestSelected,
+    getCurriculumHierarchy,
+    resetVectorDb,
   };
 }

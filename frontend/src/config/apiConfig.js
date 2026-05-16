@@ -12,4 +12,10 @@ export const API_ENDPOINTS = {
   // Upgrade B — URL ingestion
   INGEST_FROM_URL: '/ingest_from_url',
   PURGE_ALL: '/purge_all',
+  DETECT_SUBJECT: '/detect_subject',
+  // Curriculum-driven architecture (new)
+  PARSE_CURRICULUM: '/parse_curriculum',
+  INGEST_SELECTED: '/ingest_selected',
+  CURRICULUM_HIERARCHY: '/curriculum_hierarchy',
+  RESET_VECTOR_DB: '/reset_vector_db',
 };
