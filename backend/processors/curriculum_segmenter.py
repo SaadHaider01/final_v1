@@ -348,7 +348,7 @@ def segment_curriculum(text: str) -> list:
                     # If we already have a value, only overwrite if this line looks "stronger" (e.g. starts with Dept)
                     if global_dept == "Department Unknown" or "dept" in line.lower():
                         global_dept = cand
-                        print(f"[Curriculum Parser]   → Identified Dept: {global_dept}")
+                        print(f"[Curriculum Parser]   -> Identified Dept: {global_dept}")
 
     print(f"[Curriculum Parser] Global Context: {global_program} | {global_dept}")
 
@@ -392,7 +392,7 @@ def segment_curriculum(text: str) -> list:
                 "syllabus_text":         block_text,
                 "department":            global_dept # legacy
             })
-            print(f"[Curriculum Parser] → Found: {sid} | {current_subject_name}")
+            print(f"[Curriculum Parser] -> Found: {sid} | {current_subject_name}")
             
         current_subject_name = None
         current_subject_code = None
@@ -401,7 +401,7 @@ def segment_curriculum(text: str) -> list:
 
     # Regex for detecting the start of a references section
     _REF_HEADING_RE = re.compile(
-        r"^(?:\d+\.?\s*)?(?:Text\s*books?|References?|Reference\s*books?|Suggested\s*Readings?|Bibliography)\s*:?\s*$",
+        r"^(?:\d+\.?\s*)?(?:Text\s*books?|References?|Reference\s*books?|Suggested\s*Readings?|Bibliography)(?:\s*and\s*reference\s*books?)?\s*:?",
         re.IGNORECASE
     )
 

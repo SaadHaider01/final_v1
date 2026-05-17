@@ -588,32 +588,58 @@ def ingest_from_url():
     segment_ids = []
 
     for seg in segments:
-        seg_id = str(uuid.uuid4())
+        seg_id = seg.get("syllabus_id") or str(uuid.uuid4())
+        
+        # Check if already embedded
+        existing = vector_db.collection.get(where={"syllabus_id": seg_id})
+        if existing and existing.get("ids"):
+            print(f"[Ingestion] URL: Skipping duplicate {seg_id}")
+            segment_ids.append(seg_id)
+            continue
+            
         segment_ids.append(seg_id)
         
-        raw_seg_chunks = chunk_syllabus_with_modules(seg["text"])
-        seg_chunks = [c for c in raw_seg_chunks if not _is_reference_entry(c[0])]
+        raw_seg_chunks = chunk_syllabus_with_modules(seg.get("syllabus_text", seg.get("text", "")))
+        ref_filtered = [c for c in raw_seg_chunks if not _is_reference_entry(c[0])]
+        clean_chunks, purged = filter_chunks_for_embedding(ref_filtered)
+        
+        if not clean_chunks:
+            continue
+
+        extra_meta = {
+            "curriculum_department":  seg.get("curriculum_department", data.get("department", "")),
+            "subject_owner_department": seg.get("subject_owner_department", ""),
+            "department":             seg.get("department", data.get("department", "")),
+            "semester":               seg.get("semester", data.get("semester", "")),
+            "program":                seg.get("program", data.get("program", "")),
+            "subject_code":           seg.get("subject_code", data.get("subject_code", "")),
+            "subject_name":           seg.get("subject_name", data.get("subject_name", "")),
+            "elective_type":          seg.get("elective_type", ""),
+            "metadata_confidence":    seg.get("metadata_confidence", "Low"),
+        }
+        
+        vector_db.add_syllabus(seg_id, clean_chunks, extra_meta=extra_meta)
+        
+        try:
+            concept_store.add_syllabus_concepts(seg_id, [c for c, _ in clean_chunks])
+        except Exception as e:
+            pass
 
         SYLLABI[seg_id] = {
             "syllabus_id":  seg_id,
             "bos":          bos_val,
-            "department":   seg["department"],
-            "program":      program_val,
-            "semester":     seg["semester"],
-            "subject_code": seg["subject_code"],
-            "subject_name": seg["subject_name"],
+            "curriculum_department": extra_meta["curriculum_department"],
+            "subject_owner_department": extra_meta["subject_owner_department"],
+            "department":   extra_meta["department"],
+            "program":      extra_meta["program"],
+            "semester":     extra_meta["semester"],
+            "subject_code": extra_meta["subject_code"],
+            "subject_name": extra_meta["subject_name"],
+            "elective_type": extra_meta["elective_type"],
+            "metadata_confidence": extra_meta["metadata_confidence"],
+            "modules":      seg.get("modules", []),
         }
-
-        extra_meta = {
-            "bos": bos_val,
-            "department": seg["department"],
-            "program": program_val,
-            "semester": seg["semester"],
-            "subject_code": seg["subject_code"],
-            "subject_name": seg["subject_name"],
-        }
-        vector_db.add_syllabus(seg_id, seg_chunks, extra_meta=extra_meta)
-        SYLLABUS_CHUNKS[seg_id] = [c for c, _ in seg_chunks]
+        SYLLABUS_CHUNKS[seg_id] = [c for c, _ in clean_chunks]
 
         if cos_raw:
             try:

@@ -132,6 +132,28 @@ def analyze_question(
 
     is_in = llm_res.get("is_in_syllabus", False)
 
+    # --- FINAL FIX 2: MATCH TYPE CONSISTENCY ---
+    if not is_in:
+        match_type = "OUT_OF_CURRICULUM"
+
+    # --- FINAL FIX 3: MATCH STRENGTH TUNING ---
+    # Retrieve highest concept boost and semantic score from top_chunks
+    concept_boost = top_chunks[0].get("concept_boost", 0.0) if top_chunks else 0.0
+    semantic_score = top_chunks[0].get("semantic_score", 0.0) if top_chunks else 0.0
+    
+    if semantic_score >= 0.80 and concept_boost > 0 and bool(syllabus_id):
+        # Prevent analytical questions from being downgraded to WEAK_MATCH
+        if match_strength in ["NO_MATCH", "WEAK_MATCH"]:
+            match_strength = "PARTIAL_MATCH"
+            
+    # --- FINAL FIX 4: MODULE DETECTION CLEANUP ---
+    # Return ONLY the top 2 strongest modules to prevent UI bloat
+    modules_detected = modules_detected[:2]
+            
+    # --- FINAL FIX 5: NO EMPTY MATCH FOUND STATES ---
+    if not top_chunks:
+        retrieval_status = "NO_MATCH"
+
     return {
         # Existing keys
         "is_in_syllabus":    is_in,

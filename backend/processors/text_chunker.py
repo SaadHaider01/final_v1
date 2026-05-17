@@ -182,6 +182,24 @@ def _split_section_into_topics(body: str, unit_label: str | None):
 
     Returns list of (chunk_text, unit_label).
     """
+    # --- FINAL FIX 1: REFERENCE POLLUTION ---
+    # Strip any reference sections from this module's body.
+    # The next module boundary is handled by the parent caller.
+    lines = body.split("\n")
+    clean_lines = []
+    _REF_HEADING_RE = re.compile(
+        r"^(?:\d+\.?\s*)?(?:Text\s*books?|References?|Reference\s*books?|Suggested\s*Readings?|Bibliography)(?:\s*and\s*reference\s*books?)?\s*:?",
+        re.IGNORECASE
+    )
+    for line in lines:
+        if _REF_HEADING_RE.match(line.strip()):
+            break  # Discard the rest of this module's body
+        clean_lines.append(line)
+    
+    body = "\n".join(clean_lines).strip()
+    if not body:
+        return []
+
     topics = list(_TOPIC_NUM.finditer(body))
 
     if len(topics) >= 2:
