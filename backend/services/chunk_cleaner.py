@@ -75,11 +75,13 @@ def _is_noisy_chunk(text: str) -> bool:
     if _CO_PO_NOISE.match(t):
         return True
     
-    # Short bibliographic entries (reference books)
-    if len(t) < 200:
-        if _PUBLISHER_KW.search(t) and _BIBLIO_SIGNAL.search(t):
-            return True
-    
+    # Bibliographic entries (reference books) - STRIKER FILTERING
+    if _PUBLISHER_KW.search(t):
+        return True
+        
+    if _BIBLIO_SIGNAL.search(t):
+        return True
+        
     return False
 
 

@@ -109,8 +109,8 @@ Rules:
 
     response = llm(
         prompt,
-        max_tokens=120,
-        stop=["</s>"]
+        max_tokens=150,  # Increased slightly to prevent truncation
+        stop=["</s>", "[INST]"]
     )
 
     text = response["choices"][0]["text"]
@@ -121,11 +121,18 @@ Rules:
 
     for line in text.splitlines():
         if line.upper().startswith("DECISION:"):
-            decision = line.split(":", 1)[1].strip()
+            decision = line.split(":", 1)[1].strip().upper()
         elif line.upper().startswith("JUSTIFICATION:"):
             justification = line.split(":", 1)[1].strip()
         elif line.upper().startswith("MODULE:"):
             module = line.split(":", 1)[1].strip()
+
+    # Fallback for truncated/malformed justifications
+    if len(justification) < 15 or justification.endswith((" sy", " the", " and")):
+        if decision == "YES":
+            justification = "The application conceptually aligns with the technical scope of the syllabus."
+        else:
+            justification = "The question introduces topics or applications not explicitly supported by the syllabus."
 
     return {
         "decision": decision,
@@ -188,22 +195,35 @@ def validate_question(
     core_terms = extract_core_terms(question)
     topic_present = topic_present_in_syllabus(core_terms, top_chunks)
 
-    # 3️⃣ Definition questions
+    # 3️⃣ Concept Overlap Override
+    concept_boost = top_chunks[0].get("concept_boost", 0.0) if top_chunks else 0.0
+    semantic_score = top_chunks[0].get("semantic_score", 0.0) if top_chunks else 0.0
+    is_strongly_semantic = (similarity >= 0.75) and (semantic_score >= 0.70) and (concept_boost > 0)
+    
+    if is_strongly_semantic:
+        topic_present = True  # Override literal topic match due to strong conceptual grounding
+
+    # 4️⃣ Definition questions
     if q_type == "definition":
         if topic_present:
-            return _make_result(True, "The topic is explicitly listed in the syllabus.", top_chunks[0].get("module") or "unknown")
+            msg = "The topic is conceptually covered in the syllabus." if is_strongly_semantic else "The topic is explicitly listed in the syllabus."
+            return _make_result(True, msg, top_chunks[0].get("module") or "unknown")
         else:
             return _make_result(False, "The topic is not explicitly mentioned in the syllabus.", "unknown")
 
-    # 4️⃣ Unknown but grounded → allow
+    # 5️⃣ Unknown but grounded → allow
     if q_type == "unknown" and topic_present:
-        return _make_result(True, "The question is grounded in syllabus topics.", top_chunks[0].get("module") or "unknown")
+        msg = "The question is conceptually grounded in syllabus topics." if is_strongly_semantic else "The question is grounded in syllabus topics."
+        return _make_result(True, msg, top_chunks[0].get("module") or "unknown")
 
-    # 5️⃣ Application / analytical → LLM
+    # 6️⃣ Application / analytical → LLM
     if q_type == "application":
+        if is_strongly_semantic:
+            return _make_result(True, "The application conceptually aligns with syllabus topics.", top_chunks[0].get("module") or "unknown")
+        
         llm_result = llm_validate_application(question, top_chunks)
         strict_match = llm_result["decision"] == "YES"
         return _make_result(strict_match, llm_result["justification"], llm_result["module"])
 
-    # 6️⃣ Fallback
+    # 7️⃣ Fallback
     return _make_result(False, "Validator could not confidently ground the question in the syllabus.", "unknown")

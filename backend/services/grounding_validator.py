@@ -79,12 +79,4 @@ def is_explicitly_grounded(question: str, chunks: list, q_type: str = "unknown")
     if external_domain:
         return False, f"Question introduces external application domain '{external_domain}' not explicitly covered in syllabus."
         
-    if q_type == "application":
-        # Strict check for uppercase technical acronyms (e.g. VPN, RSA, DES)
-        acronyms = set(re.findall(r'\b[A-Z]{3,}\b', question))
-        syllabus_text = _extract_text(chunks)
-        for acr in acronyms:
-            if not re.search(r'\b' + re.escape(acr.lower()) + r'\b', syllabus_text):
-                return False, f"Required technical entity '{acr}' is not explicitly listed in the syllabus."
-                
     return True, ""

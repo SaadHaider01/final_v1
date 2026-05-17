@@ -26,12 +26,10 @@ def _classify_match_strength(similarity: float) -> str:
 def _classify_match_type(similarity: float, syllabus_id_scoped: bool) -> str:
     """
     Determine the match_type for curriculum-driven reporting.
-
-    DIRECT_SUBJECT_MATCH   — strong match inside the selected subject scope
-    RELATED_CURRICULUM_MATCH — partial/weak match (may relate to other topics)
-    OUT_OF_CURRICULUM      — insufficient evidence in any ingested content
     """
-    if similarity >= THRESHOLD_PARTIAL and syllabus_id_scoped:
+    # If we are searching within a specific syllabus and have at least a weak semantic link,
+    # the retrieved chunks BELONG to this subject. It is a direct match, even if conceptually expanded.
+    if similarity >= THRESHOLD_WEAK and syllabus_id_scoped:
         return "DIRECT_SUBJECT_MATCH"
     elif similarity >= THRESHOLD_WEAK:
         return "RELATED_CURRICULUM_MATCH"
