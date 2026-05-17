@@ -102,7 +102,25 @@ function EnrichmentRow({ result }) {
       <h4 className="text-sm font-semibold text-indigo-900">Curriculum Analysis</h4>
 
       <div className="flex flex-wrap gap-2 items-center">
-        {/* Match Type — primary indicator */}
+        {/* Curriculum Relevance */}
+        {result.curriculum_relevance !== undefined && (
+          <Badge
+            label={result.curriculum_relevance ? "YES" : "NO"}
+            colorClass={result.curriculum_relevance ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-red-100 text-red-800 border-red-300"}
+            prefix="Curriculum Relevant:"
+          />
+        )}
+
+        {/* Strict Syllabus Match */}
+        {result.strict_syllabus_match !== undefined && (
+          <Badge
+            label={result.strict_syllabus_match ? "YES" : "NO"}
+            colorClass={result.strict_syllabus_match ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-red-100 text-red-800 border-red-300"}
+            prefix="Strict Syllabus Match:"
+          />
+        )}
+
+        {/* Match Type */}
         {match_type && (
           <Badge
             label={match_type.replace(/_/g, ' ')}
@@ -204,6 +222,11 @@ function BatchCard({ qres, idx }) {
         <div className={`inline-flex items-center px-3 py-1 rounded-full border-2 text-xs font-semibold ${getDecisionBadgeClass(qres.is_in_syllabus)}`}>
           {getDecisionLabel(qres.is_in_syllabus)}
         </div>
+        {!qres.is_in_syllabus && qres.rejection_reason && (
+          <p className="mt-2 text-sm text-red-700 bg-red-50 p-2 rounded border border-red-200">
+            <strong>Reason:</strong> {qres.rejection_reason}
+          </p>
+        )}
       </div>
 
       {/* Similarity */}
@@ -341,11 +364,16 @@ function AnalysisResultPanel({ result }) {
         <div className={`inline-flex items-center px-4 py-2 rounded-full border-2 font-semibold ${getDecisionBadgeClass(result.is_in_syllabus)}`}>
           <span className="text-lg">{getDecisionLabel(result.is_in_syllabus)}</span>
         </div>
+        {!result.is_in_syllabus && result.rejection_reason && (
+          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800">
+            <strong>Rejection Reason:</strong> {result.rejection_reason}
+          </div>
+        )}
       </div>
 
       {/* Similarity Score */}
       <div className="mb-6">
-        <h4 className="text-sm font-medium text-gray-700 mb-2">Similarity Score</h4>
+        <h4 className="text-sm font-medium text-gray-700 mb-2">Hybrid Similarity Score</h4>
         <div className="flex items-center space-x-4">
           <div className="flex-grow bg-gray-200 rounded-full h-3">
             <div
@@ -357,6 +385,13 @@ function AnalysisResultPanel({ result }) {
             {formatSimilarityScore(result.similarity_score || 0)}%
           </span>
         </div>
+        {(result.semantic_score !== undefined || result.keyword_overlap_score !== undefined) && (
+          <div className="flex gap-4 mt-2 text-xs text-gray-500 font-mono">
+            {result.semantic_score !== undefined && <span>Semantic: {(result.semantic_score * 100).toFixed(1)}%</span>}
+            {result.keyword_overlap_score !== undefined && <span>Keyword: {(result.keyword_overlap_score * 100).toFixed(1)}%</span>}
+            {result.final_score !== undefined && <span>Final: {(result.final_score * 100).toFixed(1)}%</span>}
+          </div>
+        )}
       </div>
 
       {/* Gatekeeper Status */}

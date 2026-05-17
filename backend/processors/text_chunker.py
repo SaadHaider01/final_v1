@@ -248,6 +248,16 @@ def chunk_syllabus_with_modules(text: str):
         topic_chunks = _split_section_into_topics(body, label)
 
         for chunk_text, chunk_label in topic_chunks:
+            # Infer module label from chunk content if missing (e.g. "Firewall - Introduction" -> "Firewall")
+            if not chunk_label:
+                first_line = chunk_text.strip().split("\n")[0]
+                clean_title = re.sub(r"^(\d{1,2}\.?\s*|\-\s*|•\s*)", "", first_line)
+                implicit_title = re.split(r"[,:;.]|\s*-\s*", clean_title)[0].strip()
+                if 3 <= len(implicit_title) <= 60:
+                    chunk_label = implicit_title
+                else:
+                    chunk_label = "Unknown"
+
             # If chunk is small enough, keep as-is
             if len(chunk_text) <= 500:
                 result.append((chunk_text, chunk_label))

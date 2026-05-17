@@ -76,7 +76,7 @@ function Playground() {
 
       <div className="max-w-7xl mx-auto">
         {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-4">
           <h3 className="font-semibold text-blue-900 mb-2">How to Use</h3>
           <ol className="list-decimal list-inside space-y-1 text-blue-800 text-sm">
             <li>Upload a full curriculum PDF → system auto-detects all subjects</li>
@@ -85,6 +85,19 @@ function Playground() {
             <li>Enter an exam question and click "Analyze Question"</li>
           </ol>
         </div>
+
+        {/* Rebuild notice — shown when syllabi exist (old vectors may be polluted) */}
+        {syllabusOptions.length > 0 && (
+          <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 mb-8 flex items-start gap-3">
+            <span className="text-amber-600 text-lg flex-shrink-0">⚠️</span>
+            <div className="text-sm text-amber-900">
+              <span className="font-semibold">Vector DB Rebuild Recommended: </span>
+              A chunk purification update was applied. Existing vectors may contain metadata-header chunks
+              that cause false matches (e.g., subject title matching instead of content matching).
+              For best results: click <strong>Reset DB</strong> below, then re-ingest your curriculum.
+            </div>
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="mb-6 border-b border-gray-200">
@@ -155,10 +168,28 @@ function Playground() {
                       <div>
                         <div className="font-medium text-gray-900">{syllabus.subject_name}</div>
                         <div className="text-xs text-gray-600 mt-1">
-                          {syllabus.department} • {syllabus.program} • Semester {syllabus.semester}
+                          <span className="font-medium">Semester {syllabus.semester}</span>
+                          {syllabus.subject_code && <span className="ml-2 text-gray-400">Code: {syllabus.subject_code}</span>}
+                          {syllabus.subject_owner_department && (
+                            <span className="ml-2 px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px] border border-gray-200 uppercase font-semibold">
+                              Owner: {syllabus.subject_owner_department}
+                            </span>
+                          )}
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          ID: {syllabus.syllabus_id.substring(0, 8)}...
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <div className="text-[10px] text-gray-400 font-medium px-1 bg-gray-50 border border-gray-100 rounded" title={syllabus.syllabus_id}>
+                            {syllabus.program && <span className="text-primary-600 font-bold mr-1">{syllabus.program}</span>}
+                            {syllabus.curriculum_department || syllabus.department || "Department Unknown"}
+                          </div>
+                          {syllabus.metadata_confidence && (
+                            <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                              syllabus.metadata_confidence >= 0.9 
+                                ? 'text-emerald-700 bg-emerald-50 border border-emerald-100' 
+                                : 'text-amber-700 bg-amber-50 border border-amber-100'
+                            }`}>
+                              {Math.round(syllabus.metadata_confidence * 100)}% Match
+                            </div>
+                          )}
                         </div>
                       </div>
                       <button 

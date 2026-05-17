@@ -17,7 +17,7 @@ function QuestionForm({ onResult, syllabusOptions = [] }) {
   const [inputMode, setInputMode]   = useState('text');
   const [question, setQuestion]     = useState('');
   const [pdfFile, setPdfFile]       = useState(null);
-  const [threshold, setThreshold]   = useState(0.2);
+  const [threshold, setThreshold]   = useState(0.8);
   const [error, setError]           = useState(null);
 
   // Cascade state — curriculum-driven (no BOS/Program)
@@ -28,20 +28,24 @@ function QuestionForm({ onResult, syllabusOptions = [] }) {
   // ── Dynamic cascade options derived from syllabusOptions ─────────────────
 
   const deptOptions = useMemo(() =>
-    [...new Set(syllabusOptions.map(s => s.department).filter(Boolean))].sort()
+    [...new Set(syllabusOptions.map(s => (s.curriculum_department || s.department || "Department Unknown")))].sort()
   , [syllabusOptions]);
 
   const semOptions = useMemo(() =>
     [...new Set(syllabusOptions
-      .filter(s => !selectedDepartment || s.department === selectedDepartment)
+      .filter(s => {
+        const d = (s.curriculum_department || s.department || "Department Unknown");
+        return !selectedDepartment || d === selectedDepartment;
+      })
       .map(s => s.semester).filter(Boolean))].sort()
   , [syllabusOptions, selectedDepartment]);
 
   const filteredSyllabi = useMemo(() =>
-    syllabusOptions.filter(s =>
-      (!selectedDepartment || s.department === selectedDepartment) &&
-      (!selectedSemester   || s.semester === selectedSemester)
-    )
+    syllabusOptions.filter(s => {
+      const d = (s.curriculum_department || s.department || "Department Unknown");
+      return (!selectedDepartment || d === selectedDepartment) &&
+             (!selectedSemester   || s.semester === selectedSemester);
+    })
   , [syllabusOptions, selectedDepartment, selectedSemester]);
 
   // Reset/sync downstream on cascade change
@@ -52,8 +56,10 @@ function QuestionForm({ onResult, syllabusOptions = [] }) {
     if (sid) {
       const match = syllabusOptions.find(s => s.syllabus_id === sid);
       if (match) {
-        if (selectedDepartment !== match.department) setSelectedDepartment(match.department || '');
-        if (selectedSemester !== match.semester) setSelectedSemester(match.semester || '');
+        // Step 1: Auto-sync hierarchy
+        const targetDept = (match.curriculum_department || match.department || "Department Unknown");
+        if (selectedDepartment !== targetDept) setSelectedDepartment(targetDept);
+        if (match.semester && selectedSemester !== match.semester) setSelectedSemester(match.semester);
       }
     }
   };
@@ -254,7 +260,13 @@ function QuestionForm({ onResult, syllabusOptions = [] }) {
                   <div className="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg p-3 mt-4 shadow-sm">
                     <p className="font-semibold text-indigo-800 mb-1.5 uppercase tracking-wider text-[10px]">Retrieval Scope:</p>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-medium bg-white px-1.5 py-0.5 rounded border border-indigo-100">{sel.department || "General"}</span>
+                      <span className="font-bold text-primary-700 bg-primary-50 px-1.5 py-0.5 rounded border border-primary-200">
+                        {sel.program || "Program Unknown"}
+                      </span>
+                      <span className="text-indigo-300">→</span>
+                      <span className="font-medium bg-white px-1.5 py-0.5 rounded border border-indigo-100">
+                        {sel.curriculum_department || sel.department || "Department Unknown"}
+                      </span>
                       <span className="text-indigo-300">→</span>
                       <span className="font-medium bg-white px-1.5 py-0.5 rounded border border-indigo-100">Semester {sel.semester || "?"}</span>
                       <span className="text-indigo-300">→</span>

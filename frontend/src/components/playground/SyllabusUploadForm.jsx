@@ -100,12 +100,17 @@ function SyllabusUploadForm({ onSuccess }) {
       };
       const result = await ingestSelected(payload);
 
+      const deptsCount = new Set(parsedSegments.map(s => s.department).filter(Boolean)).size;
+      const semsCount  = new Set(parsedSegments.map(s => s.semester).filter(Boolean)).size;
+
       setSuccess({
         type: 'stats',
         parsed: all ? parsedSegments.length : selectedIds.size,
         ingested: result.ingested?.length || 0,
         skipped: result.skipped_duplicates?.length || 0,
         chunks: result.chunks_generated || 0,
+        depts: deptsCount,
+        sems: semsCount
       });
       setPhase('upload');
       setParsedSegments([]);
@@ -179,22 +184,34 @@ function SyllabusUploadForm({ onSuccess }) {
         {error   && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>}
         {success && success.type === 'stats' && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
-            <h4 className="text-sm font-bold text-green-900 mb-2">✅ Ingestion Complete</h4>
-            <div className="grid grid-cols-3 gap-2 text-center">
+            <h4 className="text-sm font-bold text-green-900 mb-2">✅ Curriculum Ingested Successfully</h4>
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-2 text-center">
+              <div className="bg-white p-2 rounded border border-green-100">
+                <div className="text-lg font-bold text-green-700">{success.depts}</div>
+                <div className="text-[9px] uppercase font-semibold text-green-600">Depts</div>
+              </div>
+              <div className="bg-white p-2 rounded border border-green-100">
+                <div className="text-lg font-bold text-green-700">{success.sems}</div>
+                <div className="text-[9px] uppercase font-semibold text-green-600">Sems</div>
+              </div>
               <div className="bg-white p-2 rounded border border-green-100">
                 <div className="text-lg font-bold text-green-700">{success.parsed}</div>
-                <div className="text-[10px] uppercase font-semibold text-green-600">Selected</div>
+                <div className="text-[9px] uppercase font-semibold text-green-600">Subjects</div>
               </div>
               <div className="bg-white p-2 rounded border border-green-100">
                 <div className="text-lg font-bold text-green-700">{success.ingested}</div>
-                <div className="text-[10px] uppercase font-semibold text-green-600">Embedded</div>
+                <div className="text-[9px] uppercase font-semibold text-green-600">Embedded</div>
               </div>
-              <div className="bg-white p-2 rounded border border-green-100">
+              <div className="bg-white p-2 rounded border border-green-100 col-span-3 md:col-span-1">
                 <div className="text-lg font-bold text-green-700">{success.chunks}</div>
-                <div className="text-[10px] uppercase font-semibold text-green-600">Chunks</div>
+                <div className="text-[9px] uppercase font-semibold text-green-600">Chunks</div>
               </div>
             </div>
-            {success.skipped > 0 && <p className="text-xs text-green-700 mt-2 text-center">Skipped {success.skipped} duplicate(s).</p>}
+            {success.skipped > 0 && (
+              <p className="text-[10px] text-green-600 mt-2 text-center italic">
+                ℹ️ {success.skipped} subject(s) were already in the database and were skipped.
+              </p>
+            )}
           </div>
         )}
         {success && typeof success === 'string' && (

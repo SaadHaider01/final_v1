@@ -16,6 +16,7 @@ from processors.text_chunker import chunk_syllabus, chunk_syllabus_with_modules
 from processors.curriculum_segmenter import segment_curriculum
 from vectorstores.chroma_store import VectorStore
 from services.chunk_cleaner import clean_retrieved_chunks
+from services.chunk_quality import filter_chunks_for_embedding   # NEW: pre-embedding quality gate
 
 from services.question_analyzer import analyze_question
 from services.co_mapper import CoMapper            # Feature 3
@@ -33,6 +34,70 @@ co_mapper  = CoMapper(embed_fn=embedder.embed)     # Feature 3 — shares same e
 SYLLABI         = {}
 SYLLABUS_CHUNKS = {}
 PARSED_SEGMENTS = {}  # Temporary store: parse_id → list of segment dicts (not yet embedded)
+
+
+# --------------------------------------------------
+# Startup: Hydrate SYLLABI from persisted ChromaDB
+# --------------------------------------------------
+def _hydrate_syllabi_from_chroma():
+    """
+    On every server start, rebuild the in-memory SYLLABI dict from ChromaDB
+    metadata so that the frontend's /list_syllabi returns the correct data
+    even after a server restart.
+
+    ChromaDB persists vectors to disk; SYLLABI is in-memory only.
+    Without hydration, a restart causes SYLLABI = {} while vectors still exist,
+    making the frontend show an empty list yet the 'already_ingested' check
+    in /parse_curriculum returns True (causing 'already selected but nothing shown').
+    """
+    try:
+        all_data = vector_db.collection.get(include=["metadatas"])
+        metas    = all_data.get("metadatas") or []
+
+        seen_ids = set()
+        hydrated = 0
+
+        for meta in metas:
+            sid = meta.get("syllabus_id")
+            if not sid:
+                continue
+            
+            # Extract module if it exists
+            mod = meta.get("module")
+            
+            # If new syllabus, initialize it
+            if sid not in seen_ids:
+                seen_ids.add(sid)
+                SYLLABI[sid] = {
+                    "syllabus_id":           sid,
+                    "curriculum_department":  meta.get("curriculum_department") or meta.get("department", ""),
+                    "department":             meta.get("department", ""),
+                    "subject_owner_department": meta.get("subject_owner_department", ""),
+                    "semester":              meta.get("semester", ""),
+                    "subject_code":          meta.get("subject_code", ""),
+                    "subject_name":          meta.get("subject_name", "Unknown Subject"),
+                    "elective_type":         meta.get("elective_type", "CORE"),
+                    "metadata_confidence":   meta.get("metadata_confidence", 0.7),
+                    "bos":                   meta.get("bos", ""),
+                    "program":               meta.get("program", ""),
+                    "modules":               [],
+                }
+                hydrated += 1
+            
+            # Append unique modules
+            if mod and mod.lower() != "unknown" and mod not in SYLLABI[sid]["modules"]:
+                SYLLABI[sid]["modules"].append(mod)
+
+        if hydrated:
+            print(f"[Startup] Hydrated {hydrated} syllabus entries from ChromaDB.")
+        else:
+            print("[Startup] ChromaDB is empty — no prior ingestions found.")
+
+    except Exception as e:
+        print(f"[Startup] Hydration failed (non-fatal): {e}")
+
+
+_hydrate_syllabi_from_chroma()
 
 # --------------------------------------------------
 # Helpers
@@ -87,6 +152,16 @@ _MODULE_RE = re.compile(
 _BARE_UNIT_RE = re.compile(
     r"(?:^|\n)\s*(\d{1,2})\s+([A-Z][^:\n]{2,60}?):\s*",
 )
+
+def _calculate_keyword_overlap(question: str, chunk_text: str) -> float:
+    """Calculate simple lexical overlap of technical terms between question and chunk."""
+    q_words = set(w for w in re.findall(r'\b[a-zA-Z0-9]{4,}\b', question.lower()))
+    if not q_words:
+        return 0.0
+    c_words = set(w for w in re.findall(r'\b[a-zA-Z0-9]{4,}\b', chunk_text.lower()))
+    overlap = q_words.intersection(c_words)
+    return len(overlap) / len(q_words)
+
 
 def _extract_module(text: str):
     """Return a module label from chunk text, or None."""
@@ -291,6 +366,10 @@ def _build_result(q_text, similarity, top_chunks, analysis):
         "llm_justification": analysis["llm"]["llm_justification"] if analysis["llm"] else None,
         "llm_module":        analysis["llm"]["llm_module"]        if analysis["llm"] else None,
         "top_chunks":        analysis.get("top_chunks", top_chunks),
+        # ---- diagnostics ----
+        "semantic_score":    top_chunks[0].get("semantic_score", similarity) if top_chunks else 0.0,
+        "keyword_overlap_score": top_chunks[0].get("keyword_overlap_score", 0.0) if top_chunks else 0.0,
+        "final_score":       similarity,
     }
 
 
@@ -395,8 +474,16 @@ def ingest_syllabus():
         
         # Clean text and chunk, then filter out references before embedding
         raw_seg_chunks = chunk_syllabus_with_modules(seg["text"])
-        seg_chunks = [c for c in raw_seg_chunks if not _is_reference_entry(c[0])]
-        
+        ref_filtered   = [c for c in raw_seg_chunks if not _is_reference_entry(c[0])]
+        # STEP 1-4: Pre-embedding quality gate — reject metadata/header chunks
+        seg_chunks, purged = filter_chunks_for_embedding(ref_filtered)
+        print(f"[Ingest Legacy] {seg.get('subject_name','?')}: {len(seg_chunks)} quality chunks "
+              f"({purged} low-info purged)")
+
+        if not seg_chunks:
+            print(f"[Ingest Legacy] No quality chunks for {seg.get('subject_name')} — skipping segment.")
+            continue
+
         SYLLABI[seg_id] = {
             "syllabus_id":  seg_id,
             "bos":          bos_val,
@@ -695,19 +782,28 @@ def analyze():
         top_chunks = []
 
         if distances and distances[0]:
-            # Overall similarity is based on the closest match
-            similarity = max(0.0, min(1.0, 1.0 - float(distances[0][0])))
-
             for d, doc, meta in zip(distances[0], docs[0], metas[0]):
                 d = float(d) if d is not None else 1.0
+                sem_sim = max(0.0, min(1.0, 1.0 - d))
+                kw_overlap = _calculate_keyword_overlap(q_text, doc)
+                # Hybrid score: 80% semantic, 20% exact keyword overlap
+                final_sim = (sem_sim * 0.80) + (kw_overlap * 0.20)
+                
                 top_chunks.append({
                     "text":       doc,
                     "distance":   d,
-                    "similarity": max(0.0, min(1.0, 1.0 - d)),
+                    "semantic_score": sem_sim,
+                    "keyword_overlap_score": kw_overlap,
+                    "similarity": final_sim,
                     "module": (
                         meta.get("module") or _extract_module(doc)
                     ) if isinstance(meta, dict) else _extract_module(doc),
                 })
+            
+            # Re-sort chunks by new hybrid similarity
+            top_chunks.sort(key=lambda x: x["similarity"], reverse=True)
+            if top_chunks:
+                similarity = top_chunks[0]["similarity"]
 
         # Dedup → reference filter → smart relevance filter → chunk cleaner
         top_chunks = _smart_filter_chunks(_dedup_chunks(top_chunks))
@@ -839,15 +935,19 @@ def parse_curriculum():
     preview = []
     for seg in segments:
         preview.append({
-            "syllabus_id":   seg["syllabus_id"],
-            "department":    seg["department"],
-            "semester":      seg["semester"],
-            "subject_name":  seg["subject_name"],
-            "subject_code":  seg["subject_code"],
-            "elective_type": seg["elective_type"],
-            "modules":       seg["modules"],
-            "text_preview":  seg["syllabus_text"][:200] + "..." if len(seg["syllabus_text"]) > 200 else seg["syllabus_text"],
-            "already_ingested": vector_db.exists(seg["syllabus_id"]),
+            "syllabus_id":           seg["syllabus_id"],
+            "curriculum_department": seg["curriculum_department"],
+            "subject_owner_department": seg.get("subject_owner_department"),
+            "department":            seg["department"],
+            "semester":              seg["semester"],
+            "program":               seg.get("program"),
+            "subject_name":          seg["subject_name"],
+            "subject_code":          seg["subject_code"],
+            "elective_type":         seg["elective_type"],
+            "metadata_confidence":   seg.get("metadata_confidence"),
+            "modules":               seg["modules"],
+            "text_preview":          seg["syllabus_text"][:200] + "..." if len(seg["syllabus_text"]) > 200 else seg["syllabus_text"],
+            "already_ingested":      vector_db.exists(seg["syllabus_id"]),
         })
 
     return jsonify({
@@ -907,47 +1007,61 @@ def ingest_selected():
             # Still register in SYLLABI if not already there
             if sid not in SYLLABI:
                 SYLLABI[sid] = {
-                    "syllabus_id":   sid,
-                    "department":    seg["department"],
-                    "semester":      seg["semester"],
-                    "subject_code":  seg["subject_code"],
-                    "subject_name":  seg["subject_name"],
-                    "elective_type": seg["elective_type"],
-                    "modules":       seg["modules"],
-                    "bos":           "",
-                    "program":       "",
+                    "syllabus_id":           sid,
+                    "curriculum_department":  seg["curriculum_department"],
+                    "subject_owner_department": seg.get("subject_owner_department"),
+                    "department":             seg["department"],
+                    "semester":               seg["semester"],
+                    "program":                seg.get("program"),
+                    "subject_code":           seg["subject_code"],
+                    "subject_name":           seg["subject_name"],
+                    "elective_type":          seg["elective_type"],
+                    "metadata_confidence":    seg.get("metadata_confidence"),
+                    "modules":                seg["modules"],
+                    "bos":                    "",
                 }
             skipped.append(sid)
             continue
 
-        # Chunk → filter references → embed
-        raw_chunks = chunk_syllabus_with_modules(seg["syllabus_text"])
-        clean_chunks = [c for c in raw_chunks if not _is_reference_entry(c[0])]
+        # Chunk → filter references → quality gate → embed
+        raw_chunks  = chunk_syllabus_with_modules(seg["syllabus_text"])
+        ref_filtered = [c for c in raw_chunks if not _is_reference_entry(c[0])]
+        # STEP 1-4: Pre-embedding quality gate — purge low-info metadata chunks
+        clean_chunks, purged = filter_chunks_for_embedding(ref_filtered)
 
         if not clean_chunks:
-            print(f"[Ingestion] No valid chunks for {sid} — skipping.")
+            print(f"[Ingestion] No quality chunks for {sid} — skipping.")
             skipped.append(sid)
             continue
 
+        print(f"[Ingestion] {sid}: {len(clean_chunks)} quality chunks ({purged} low-info purged)")
+
         extra_meta = {
-            "department":    seg["department"],
-            "semester":      seg["semester"],
-            "subject_code":  seg["subject_code"],
-            "subject_name":  seg["subject_name"],
-            "elective_type": seg["elective_type"],
+            "curriculum_department":  seg["curriculum_department"],
+            "subject_owner_department": seg.get("subject_owner_department"),
+            "department":             seg["department"],
+            "semester":               seg["semester"],
+            "program":                seg.get("program"),
+            "subject_code":           seg["subject_code"],
+            "subject_name":           seg["subject_name"],
+            "elective_type":          seg["elective_type"],
+            "metadata_confidence":    seg.get("metadata_confidence"),
         }
         vector_db.add_syllabus(sid, clean_chunks, extra_meta=extra_meta)
 
         SYLLABI[sid] = {
-            "syllabus_id":   sid,
-            "department":    seg["department"],
-            "semester":      seg["semester"],
-            "subject_code":  seg["subject_code"],
-            "subject_name":  seg["subject_name"],
-            "elective_type": seg["elective_type"],
-            "modules":       seg["modules"],
-            "bos":           "",
-            "program":       "",
+            "syllabus_id":           sid,
+            "curriculum_department":  seg["curriculum_department"],
+            "subject_owner_department": seg.get("subject_owner_department"),
+            "department":             seg["department"],
+            "semester":               seg["semester"],
+            "program":                seg.get("program"),
+            "subject_code":           seg["subject_code"],
+            "subject_name":           seg["subject_name"],
+            "elective_type":          seg["elective_type"],
+            "metadata_confidence":    seg.get("metadata_confidence"),
+            "modules":                seg["modules"],
+            "bos":                    "",
         }
         SYLLABUS_CHUNKS[sid] = [c for c, _ in clean_chunks]
         ingested.append(sid)
@@ -991,17 +1105,20 @@ def curriculum_hierarchy():
     """
     hierarchy = {}
     for s in SYLLABI.values():
-        dept = s.get("department") or "Unknown"
+        dept = s.get("curriculum_department") or s.get("department") or "Unknown"
         sem  = s.get("semester")  or "Unknown"
         if dept not in hierarchy:
             hierarchy[dept] = {}
         if sem not in hierarchy[dept]:
             hierarchy[dept][sem] = []
         hierarchy[dept][sem].append({
-            "syllabus_id":   s["syllabus_id"],
-            "subject_name":  s.get("subject_name", "Unknown Subject"),
-            "subject_code":  s.get("subject_code", ""),
-            "elective_type": s.get("elective_type", "CORE"),
+            "syllabus_id":           s["syllabus_id"],
+            "subject_name":          s.get("subject_name", "Unknown Subject"),
+            "subject_code":          s.get("subject_code", ""),
+            "program":               s.get("program", ""),
+            "elective_type":         s.get("elective_type", "CORE"),
+            "owner_department":      s.get("subject_owner_department"),
+            "metadata_confidence":   s.get("metadata_confidence", 0.7),
         })
     return jsonify({"departments": hierarchy})
 

@@ -5,11 +5,11 @@ from services.bloom_classifier import classify_bloom
 
 
 # ── Retrieval confidence thresholds ────────────────────────────────────────────
-# These values are intentionally conservative to minimise false positives.
-THRESHOLD_STRONG  = 0.88   # > 0.88  → STRONG_MATCH
-THRESHOLD_PARTIAL = 0.75   # 0.75–0.88 → PARTIAL_MATCH
-THRESHOLD_WEAK    = 0.60   # 0.60–0.75 → WEAK_MATCH
-                           # < 0.60  → NO_MATCH
+# Tightened to reduce false positives from metadata-polluted embeddings.
+THRESHOLD_STRONG  = 0.90   # > 0.90  → STRONG_MATCH   (near-certain content match)
+THRESHOLD_PARTIAL = 0.82   # 0.82–0.90 → PARTIAL_MATCH (clear topic overlap)
+THRESHOLD_WEAK    = 0.72   # 0.72–0.82 → WEAK_MATCH    (loose semantic relation)
+                           # < 0.72  → NO_MATCH        (discard — too low to trust)
 
 
 def _classify_match_strength(similarity: float) -> str:
@@ -88,37 +88,43 @@ def analyze_question(
             mapped_pco = None
 
     # --------------------------------------------------------
-    # Retrieval Confidence Gate — new spec thresholds
+    # Retrieval Confidence Gate — strict thresholds
     # --------------------------------------------------------
-    match_strength = _classify_match_strength(similarity)
-    match_type     = _classify_match_type(similarity, syllabus_id_scoped=bool(syllabus_id))
-    retrieval_status = "MATCH_FOUND" if match_strength != "NO_MATCH" else "NO_MATCH"
+    match_strength   = _classify_match_strength(similarity)
+    match_type       = _classify_match_type(similarity, syllabus_id_scoped=bool(syllabus_id))
+    is_no_match      = match_strength == "NO_MATCH"
+    retrieval_status = "NO_MATCH" if is_no_match else "MATCH_FOUND"
 
     # --------------------------------------------------------
-    # Gatekeeper logic (threshold from caller, e.g. 0.2 default)
+    # Gatekeeper logic (user-supplied threshold, default 0.80)
     # --------------------------------------------------------
-    gatekeeper_passed = similarity >= threshold
+    gatekeeper_passed = (not is_no_match) and (similarity >= threshold)
 
-    if not gatekeeper_passed or retrieval_status == "NO_MATCH":
+    # STEP 7: Hard NO_MATCH behavior — never leak weak chunks to the frontend
+    if is_no_match or not gatekeeper_passed:
         return {
             # Existing keys
             "is_in_syllabus":    False,
             "gatekeeper_passed": False,
-            "reason":            "Low semantic similarity to syllabus.",
+            "reason":            "Similarity below threshold — no valid syllabus content found.",
             "llm":               None,
-            "top_chunks":        [] if retrieval_status == "NO_MATCH" else top_chunks,
+            "top_chunks":        [],       # Always empty on NO_MATCH
             # Enrichment keys
             "retrieval_status":  retrieval_status,
             "match_strength":    match_strength,
-            "match_type":        match_type,
+            "match_type":        "OUT_OF_CURRICULUM",
             "modules_detected":  modules_detected,
             "bloom_level":       bloom_result["bloom_level"],
             "difficulty":        bloom_result["difficulty"],
             "mapped_co":         mapped_co,
             "mapped_pco":        mapped_pco,
+            # NEW Grounding keys
+            "curriculum_relevance": False,
+            "strict_syllabus_match": False,
+            "rejection_reason": "Similarity below threshold.",
         }
 
-    # LLM validation — NOT modified
+    # LLM validation — NOW INCLUDES STRICT GROUNDING
     llm_res = validate_question(
         question=question,
         top_chunks=top_chunks,
@@ -126,7 +132,7 @@ def analyze_question(
         threshold=threshold,
     )
 
-    is_in = llm_res["llm_decision"] == "YES"
+    is_in = llm_res.get("is_in_syllabus", False)
 
     return {
         # Existing keys
@@ -144,4 +150,8 @@ def analyze_question(
         "difficulty":        bloom_result["difficulty"],
         "mapped_co":         mapped_co,
         "mapped_pco":        mapped_pco,
+        # NEW Grounding keys
+        "curriculum_relevance":  llm_res.get("curriculum_relevance", True),
+        "strict_syllabus_match": llm_res.get("strict_syllabus_match", False),
+        "rejection_reason":      llm_res.get("rejection_reason", ""),
     }

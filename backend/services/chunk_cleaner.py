@@ -9,6 +9,7 @@ Removes noisy chunks that slipped through the ingestion filter:
   - Pure metadata fragments (credits, contacts)
   - Malformed / trivially short chunks
   - Accreditation noise
+  - Low-information header/admin chunks (via chunk_quality gate)
 
 This is the final quality gate before the UI displays results.
 """
@@ -87,7 +88,9 @@ def clean_retrieved_chunks(chunks: list) -> list:
     Filter a list of retrieved chunk dicts.
 
     Each chunk dict is expected to have at minimum a 'text' key.
-    Returns only chunks that pass the noise filter.
+    Applies two filter passes:
+      1. Bibliographic/metadata noise (chunk_cleaner rules)
+      2. Low-information content (chunk_quality gate — catches old polluted vectors)
 
     Args:
         chunks: list of dicts with keys like text, distance, similarity, module
@@ -95,14 +98,26 @@ def clean_retrieved_chunks(chunks: list) -> list:
     Returns:
         Filtered list of chunk dicts.
     """
+    # Import here to avoid circular dependency at module load
+    from services.chunk_quality import is_low_information_chunk
+
     cleaned = []
     removed = 0
     
     for chunk in chunks:
         text = chunk.get("text", "").strip()
+
+        # Pass 1: bibliographic/structural noise
         if _is_noisy_chunk(text):
             removed += 1
             continue
+
+        # Pass 2: low-information content (defense-in-depth for old vectors)
+        if is_low_information_chunk(text):
+            removed += 1
+            print(f"[Chunk Cleaner] Quality-gated retrieved chunk: {text[:60]!r}")
+            continue
+
         cleaned.append(chunk)
     
     if removed:
