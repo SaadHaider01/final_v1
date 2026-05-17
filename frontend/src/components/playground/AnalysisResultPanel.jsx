@@ -389,6 +389,7 @@ function AnalysisResultPanel({ result }) {
           <div className="flex gap-4 mt-2 text-xs text-gray-500 font-mono">
             {result.semantic_score !== undefined && <span>Semantic: {(result.semantic_score * 100).toFixed(1)}%</span>}
             {result.keyword_overlap_score !== undefined && <span>Keyword: {(result.keyword_overlap_score * 100).toFixed(1)}%</span>}
+            {result.concept_boost > 0 && <span className="text-emerald-600 font-bold">Concept Boost: +{(result.concept_boost * 100).toFixed(1)}%</span>}
             {result.final_score !== undefined && <span>Final: {(result.final_score * 100).toFixed(1)}%</span>}
           </div>
         )}

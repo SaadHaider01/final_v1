@@ -20,6 +20,7 @@ from services.chunk_quality import filter_chunks_for_embedding   # NEW: pre-embe
 
 from services.question_analyzer import analyze_question
 from services.co_mapper import CoMapper            # Feature 3
+from services.concept_expander import ConceptStore
 
 # --------------------------------------------------
 # App setup
@@ -30,6 +31,7 @@ CORS(app)
 embedder   = Embedder()
 vector_db  = VectorStore(embed_fn=embedder.embed)
 co_mapper  = CoMapper(embed_fn=embedder.embed)     # Feature 3 — shares same embedder
+concept_store = ConceptStore(embed_fn=embedder.embed)
 
 SYLLABI         = {}
 SYLLABUS_CHUNKS = {}
@@ -369,6 +371,7 @@ def _build_result(q_text, similarity, top_chunks, analysis):
         # ---- diagnostics ----
         "semantic_score":    top_chunks[0].get("semantic_score", similarity) if top_chunks else 0.0,
         "keyword_overlap_score": top_chunks[0].get("keyword_overlap_score", 0.0) if top_chunks else 0.0,
+        "concept_boost":     top_chunks[0].get("concept_boost", 0.0) if top_chunks else 0.0,
         "final_score":       similarity,
     }
 
@@ -782,18 +785,29 @@ def analyze():
         top_chunks = []
 
         if distances and distances[0]:
+            # --- DYNAMIC CONCEPT EXPANSION BOOST ---
+            concept_boost = 0.0
+            if syllabus_id:
+                concept_boost = concept_store.compute_concept_boost(q_text, syllabus_id)
+
             for d, doc, meta in zip(distances[0], docs[0], metas[0]):
                 d = float(d) if d is not None else 1.0
                 sem_sim = max(0.0, min(1.0, 1.0 - d))
                 kw_overlap = _calculate_keyword_overlap(q_text, doc)
+                
                 # Hybrid score: 80% semantic, 20% exact keyword overlap
-                final_sim = (sem_sim * 0.80) + (kw_overlap * 0.20)
+                base_sim = (sem_sim * 0.80) + (kw_overlap * 0.20)
+                
+                # Apply safe hybrid boosting (only if moderately high)
+                applied_boost = concept_boost if base_sim > 0.60 else 0.0
+                final_sim = min(1.0, base_sim + applied_boost)
                 
                 top_chunks.append({
                     "text":       doc,
                     "distance":   d,
                     "semantic_score": sem_sim,
                     "keyword_overlap_score": kw_overlap,
+                    "concept_boost": applied_boost,
                     "similarity": final_sim,
                     "module": (
                         meta.get("module") or _extract_module(doc)
@@ -1048,6 +1062,13 @@ def ingest_selected():
             "metadata_confidence":    seg.get("metadata_confidence"),
         }
         vector_db.add_syllabus(sid, clean_chunks, extra_meta=extra_meta)
+        
+        # Ingest dynamic curriculum concepts into ConceptStore
+        try:
+            concept_store.add_syllabus_concepts(sid, [c for c, _ in clean_chunks])
+            print(f"[Ingestion] Extracted local concepts for {sid}")
+        except Exception as e:
+            print(f"[Ingestion] Failed to extract concepts for {sid}: {e}")
 
         SYLLABI[sid] = {
             "syllabus_id":           sid,
