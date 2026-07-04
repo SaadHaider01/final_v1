@@ -21,6 +21,14 @@ from services.chunk_quality import filter_chunks_for_embedding   # NEW: pre-embe
 from services.question_analyzer import analyze_question
 from services.co_mapper import CoMapper            # Feature 3
 from services.concept_expander import ConceptStore
+from services.curriculum_scope_validator import (
+    extract_syllabus_concepts,
+    store_scope_concepts,
+    delete_scope_concepts,
+    clear_all_scope_concepts,
+    validate_scope,
+)
+from config import SCOPE_VALIDATOR_ENABLED, SCOPE_HIGH_SIM_THR, SCOPE_OVERLAP_MIN_THR, SCOPE_CONCEPTS_TOP_N, SCOPE_SEMANTIC_CUTOFF
 
 # --------------------------------------------------
 # App setup
@@ -90,6 +98,24 @@ def _hydrate_syllabi_from_chroma():
             if mod and mod.lower() != "unknown" and mod not in SYLLABI[sid]["modules"]:
                 SYLLABI[sid]["modules"].append(mod)
 
+        # Automatically backfill scope concepts for hydrated syllabi if they don't have them
+        for sid in seen_ids:
+            try:
+                from services.curriculum_scope_validator import load_scope_concepts, store_scope_concepts, extract_syllabus_concepts
+                if not load_scope_concepts(sid):
+                    print(f"[Startup] Backfilling scope concepts for syllabus: {sid}")
+                    res = vector_db.collection.get(where={"syllabus_id": sid}, include=["documents"])
+                    docs = res.get("documents") or []
+                    if docs:
+                        full_text = " ".join(docs)
+                        concepts = extract_syllabus_concepts(full_text, top_n=SCOPE_CONCEPTS_TOP_N)
+                        store_scope_concepts(sid, concepts)
+                        print(f"[Startup] Successfully backfilled {len(concepts)} concepts for {sid}")
+                    else:
+                        print(f"[Startup] No documents found in database for {sid}")
+            except Exception as ex:
+                print(f"[Startup] Failed to backfill concepts for {sid}: {ex}")
+
         if hydrated:
             print(f"[Startup] Hydrated {hydrated} syllabus entries from ChromaDB.")
         else:
@@ -100,6 +126,7 @@ def _hydrate_syllabi_from_chroma():
 
 
 _hydrate_syllabi_from_chroma()
+
 
 # --------------------------------------------------
 # Helpers
@@ -510,6 +537,14 @@ def ingest_syllabus():
         vector_db.add_syllabus(seg_id, seg_chunks, extra_meta=extra_meta)
         SYLLABUS_CHUNKS[seg_id] = [c for c, _ in seg_chunks]
 
+        # Curriculum Scope Validator — extract and store domain concepts
+        try:
+            _scope_text = " ".join(c for c, _ in seg_chunks)
+            _scope_concepts = extract_syllabus_concepts(_scope_text, top_n=SCOPE_CONCEPTS_TOP_N)
+            store_scope_concepts(seg_id, _scope_concepts)
+        except Exception as _e:
+            print(f"[ScopeValidator] Concept extraction failed for {seg_id}: {_e}")
+
         # Feature 3 — optional CO/PCO ingestion (applied to all segments for now)
         if cos_raw:
             try:
@@ -619,11 +654,19 @@ def ingest_from_url():
         }
         
         vector_db.add_syllabus(seg_id, clean_chunks, extra_meta=extra_meta)
-        
+
         try:
             concept_store.add_syllabus_concepts(seg_id, [c for c, _ in clean_chunks])
         except Exception as e:
             pass
+
+        # Curriculum Scope Validator — extract and store domain concepts
+        try:
+            _scope_text = " ".join(c for c, _ in clean_chunks)
+            _scope_concepts = extract_syllabus_concepts(_scope_text, top_n=SCOPE_CONCEPTS_TOP_N)
+            store_scope_concepts(seg_id, _scope_concepts)
+        except Exception as _e:
+            print(f"[ScopeValidator] Concept extraction failed for {seg_id}: {_e}")
 
         SYLLABI[seg_id] = {
             "syllabus_id":  seg_id,
@@ -677,9 +720,10 @@ def delete_syllabus():
     syllabus_id = data.get("syllabus_id", "")
     if syllabus_id in SYLLABI:
         del SYLLABI[syllabus_id]
-    # Also remove from vector store and chunk cache
+    # Also remove from vector store, chunk cache, and scope concepts
     vector_db.delete_syllabus(syllabus_id)
     SYLLABUS_CHUNKS.pop(syllabus_id, None)
+    delete_scope_concepts(syllabus_id)
     return jsonify({"success": True})
 
 
@@ -694,6 +738,7 @@ def purge_all():
         vector_db.delete_syllabus(sid)
     SYLLABI.clear()
     SYLLABUS_CHUNKS.clear()
+    clear_all_scope_concepts()   # wipe scope_concepts.json
 
     # Also try to nuke any orphaned vectors not tracked in SYLLABI
     try:
@@ -849,6 +894,47 @@ def analyze():
         top_chunks = _smart_filter_chunks(_dedup_chunks(top_chunks))
         top_chunks = clean_retrieved_chunks(top_chunks)  # post-retrieval noise gate
 
+        # ── Curriculum Scope Validator ──────────────────────────────────────
+        # Fires only when similarity is high AND concept overlap is extremely low.
+        # Catches false positives caused by generic shared academic vocabulary
+        # (e.g. ML question scoring high on a Cryptography syllabus because
+        # both domains use "algorithm", "key", "system").
+        if SCOPE_VALIDATOR_ENABLED:
+            scope_result = validate_scope(
+                question=q_text,
+                similarity=similarity,
+                syllabus_id=syllabus_id,
+                embed_fn=embedder.embed,
+                high_sim_threshold=SCOPE_HIGH_SIM_THR,
+                min_overlap_threshold=SCOPE_OVERLAP_MIN_THR,
+                semantic_cutoff=SCOPE_SEMANTIC_CUTOFF,
+            )
+            if scope_result["is_out_of_scope"]:
+                # Build a rejection result without invoking the LLM
+                rejection_analysis = {
+                    "is_in_syllabus":        False,
+                    "gatekeeper_passed":     False,
+                    "reason":                scope_result["reason"],
+                    "llm":                   None,
+                    "top_chunks":            [],
+                    "retrieval_status":      "MATCH_FOUND",
+                    "match_strength":        "WEAK_MATCH",
+                    "match_type":            "OUT_OF_CURRICULUM",
+                    "modules_detected":      [],
+                    "bloom_level":           "Unknown",
+                    "difficulty":            "Unknown",
+                    "mapped_co":             None,
+                    "mapped_pco":            None,
+                    "curriculum_relevance":  False,
+                    "strict_syllabus_match": False,
+                    "rejection_reason":      scope_result["reason"],
+                    "concept_overlap":       scope_result["concept_overlap"],
+                    "scope_rejected":        True,
+                }
+                processed_results.append(_build_result(q_text, similarity, [], rejection_analysis))
+                continue
+        # ── End Scope Validator ─────────────────────────────────────────────
+
         syllabus_meta = SYLLABI.get(syllabus_id, {}) if syllabus_id else {}
 
         analysis = analyze_question(
@@ -860,7 +946,7 @@ def analyze():
             syllabus_id=syllabus_id,
             syllabus_meta=syllabus_meta,
         )
-        
+
         processed_results.append(_build_result(q_text, similarity, top_chunks, analysis))
 
     if len(questions) == 1:
@@ -1088,13 +1174,21 @@ def ingest_selected():
             "metadata_confidence":    seg.get("metadata_confidence"),
         }
         vector_db.add_syllabus(sid, clean_chunks, extra_meta=extra_meta)
-        
-        # Ingest dynamic curriculum concepts into ConceptStore
+
+        # Existing ConceptStore (retrieval boosting)
         try:
             concept_store.add_syllabus_concepts(sid, [c for c, _ in clean_chunks])
             print(f"[Ingestion] Extracted local concepts for {sid}")
         except Exception as e:
             print(f"[Ingestion] Failed to extract concepts for {sid}: {e}")
+
+        # Curriculum Scope Validator — extract and store domain concepts
+        try:
+            _scope_text = " ".join(c for c, _ in clean_chunks)
+            _scope_concepts = extract_syllabus_concepts(_scope_text, top_n=SCOPE_CONCEPTS_TOP_N)
+            store_scope_concepts(sid, _scope_concepts)
+        except Exception as _e:
+            print(f"[ScopeValidator] Concept extraction failed for {sid}: {_e}")
 
         SYLLABI[sid] = {
             "syllabus_id":           sid,

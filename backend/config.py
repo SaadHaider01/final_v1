@@ -19,3 +19,30 @@ LLM_RUNTIME = {
 
 # Multi-module detection: minimum chunk similarity to count a module
 MODULE_SIMILARITY_THRESHOLD = 0.5
+
+# --------------------------------------------------
+# Curriculum Scope Validator
+# --------------------------------------------------
+
+# Master switch — set to False to disable the gate entirely (for debugging).
+SCOPE_VALIDATOR_ENABLED = True
+
+# Minimum retrieval similarity that activates the scope check.
+# Matches THRESHOLD_WEAK from question_analyzer.py so that the scope
+# validator runs for any question that passes the similarity gate.
+SCOPE_HIGH_SIM_THR = 0.72
+
+# Minimum concept overlap score required to pass the scope gate.
+# Questions below this threshold are rejected as OUT_OF_CURRICULUM without
+# invoking the LLM.  Lower = more permissive, higher = stricter.
+SCOPE_OVERLAP_MIN_THR = 0.24
+
+# Cosine similarity cutoff for word-level matches.
+# Similarities below this are treated as 0.0 to filter out dense embedding noise.
+SCOPE_SEMANTIC_CUTOFF = 0.86
+
+
+# Number of domain-specific concepts to extract per syllabus at ingestion time.
+SCOPE_CONCEPTS_TOP_N = 150
+
+

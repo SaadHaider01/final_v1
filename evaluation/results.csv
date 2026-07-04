@@ -16,7 +16,7 @@ What is a digital certificate?,True,True,0.8052078119913737,Remember,WEAK_MATCH,
 Explain the concept of confidentiality in information security.,True,True,0.8250731086730958,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
 Define integrity in network security.,True,True,0.8236119461059571,Remember,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
 What is non-repudiation?,True,False,0.5748897552490234,Remember,NO_MATCH,OUT_OF_CURRICULUM,False
-Explain the concept of access control.,True,True,0.7846230697631836,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain the concept of access control.,True,False,0.7846230697631836,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,False
 What is a brute force attack?,True,True,0.7267273521423341,Remember,WEAK_MATCH,DIRECT_SUBJECT_MATCH,True
 Explain replay attacks in network security.,True,True,0.8150623893737794,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
 Compare symmetric and asymmetric encryption techniques.,True,True,0.9060322952270508,Analyze,STRONG_MATCH,DIRECT_SUBJECT_MATCH,True
@@ -60,44 +60,44 @@ Evaluate the importance of access control in organizational security.,True,True,
 Analyze the effectiveness of biometric authentication systems.,True,True,0.8485494136810304,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
 Design a secure communication model using RSA and digital signatures.,True,True,0.8077571719033378,Create,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
 Explain blockchain consensus mechanisms in Bitcoin networks.,False,False,0.7081005668640137,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
-Design a neural network for malware image classification.,False,False,0.788686850865682,Create,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Design a neural network for malware image classification.,False,False,0.788686850865682,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Explain the working of Kubernetes orchestration architecture.,False,False,0.6824583625793457,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
 Describe Hadoop distributed file system architecture.,False,False,0.6842931365966798,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
 Explain recommendation systems used in e-commerce platforms.,False,False,0.6916740036010742,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
 Analyze gradient descent optimization in deep learning.,False,False,0.6763477420806885,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
 Explain the architecture of autonomous vehicle navigation systems.,False,False,0.6989814376831056,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
-Describe machine learning approaches for sentiment analysis.,False,True,0.7720338376363118,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Describe machine learning approaches for sentiment analysis.,False,False,0.7720338376363118,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Explain convolutional neural networks used in image recognition.,False,False,0.6836876487731933,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
-Analyze the role of artificial intelligence in healthcare diagnostics.,False,True,0.7392591667175293,Analyze,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
-Describe cloud resource allocation in distributed cloud systems.,False,True,0.750603551864624,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Analyze the role of artificial intelligence in healthcare diagnostics.,False,False,0.7392591667175293,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Describe cloud resource allocation in distributed cloud systems.,False,False,0.750603551864624,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Explain reinforcement learning in robotics applications.,False,False,0.685295639038086,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
 Analyze blockchain smart contract vulnerabilities.,False,False,0.6943815803527833,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
 Explain containerization using Docker and Kubernetes.,False,False,0.7011198616027832,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
-Describe big data analytics techniques for business intelligence.,False,True,0.7867621930440267,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Describe big data analytics techniques for business intelligence.,False,False,0.7867621930440267,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Analyze neural network overfitting problems in AI systems.,False,False,0.6988814767201741,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
 Explain edge computing architectures for IoT systems.,False,False,0.7100643730163574,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
-Describe predictive analytics in recommendation engines.,False,False,0.7340157222747803,Understand,WEAK_MATCH,OUT_OF_CURRICULUM,True
-Explain natural language processing techniques in chatbots.,False,True,0.79905166943868,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,False
+Describe predictive analytics in recommendation engines.,False,False,0.7340157222747803,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Explain natural language processing techniques in chatbots.,False,False,0.79905166943868,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Analyze deep learning approaches for autonomous drones.,False,False,0.7161959107716878,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
 Explain cryptocurrency mining mechanisms in blockchain systems.,False,False,0.7227148151397706,Understand,PARTIAL_MATCH,OUT_OF_CURRICULUM,True
-Describe federated learning in distributed AI systems.,False,True,0.745216293334961,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Describe federated learning in distributed AI systems.,False,False,0.745216293334961,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Explain virtualization in cloud computing environments.,False,False,0.7003786659240723,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
 Analyze cyber-physical systems in smart manufacturing.,False,False,0.6933308696746827,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
-Explain image segmentation techniques in computer vision.,False,True,0.7325854714711508,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
-Describe anomaly detection using machine learning algorithms.,False,True,0.7712220995766776,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Explain image segmentation techniques in computer vision.,False,False,0.7325854714711508,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Describe anomaly detection using machine learning algorithms.,False,False,0.7712220995766776,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Explain swarm intelligence in robotic systems.,False,False,0.6890263175964355,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
 Analyze transfer learning in deep neural networks.,False,False,0.6899330711364746,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
-Explain AI-based traffic prediction systems.,False,True,0.7259332656860353,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,False
-Describe cloud-native microservice architectures.,False,False,0.7520255279541016,Understand,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Explain AI-based traffic prediction systems.,False,False,0.7259332656860353,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Describe cloud-native microservice architectures.,False,False,0.7520255279541016,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Explain graph neural networks in recommendation systems.,False,False,0.6823785400390625,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
 Analyze large language models in conversational AI systems.,False,False,0.6778623199462892,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
 Explain quantum computing algorithms for cryptanalysis.,False,True,0.8141938781738282,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,False
-Describe federated blockchain architectures.,False,False,0.7634022903442383,Understand,PARTIAL_MATCH,OUT_OF_CURRICULUM,True
-Explain IoT sensor fusion techniques.,False,True,0.7468369102478027,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,False
+Describe federated blockchain architectures.,False,False,0.7634022903442383,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Explain IoT sensor fusion techniques.,False,False,0.7468369102478027,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Analyze ARIMA forecasting in time series prediction.,False,False,0.6687236404418946,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
-Describe GPU acceleration in deep learning systems.,False,False,0.744837350845337,Understand,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Describe GPU acceleration in deep learning systems.,False,False,0.744837350845337,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Explain robotic path planning algorithms.,False,False,0.7211583137512207,Understand,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Analyze transformer architectures in NLP.,False,False,0.6943775272369386,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
 Describe distributed ledger technologies in fintech systems.,False,False,0.7498662662506104,Understand,WEAK_MATCH,OUT_OF_CURRICULUM,True
 Explain cloud autoscaling strategies.,False,False,0.699831018447876,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
-Analyze recommendation engine personalization techniques.,False,False,0.7212630271911622,Analyze,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Analyze recommendation engine personalization techniques.,False,False,0.7212630271911622,Unknown,WEAK_MATCH,OUT_OF_CURRICULUM,True

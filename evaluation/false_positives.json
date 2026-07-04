@@ -1,104 +1,5 @@
 [
   {
-    "question": "Describe machine learning approaches for sentiment analysis.",
-    "similarity_score": 0.7720338376363118,
-    "match_strength": "WEAK_MATCH",
-    "match_type": "DIRECT_SUBJECT_MATCH",
-    "bloom_level": "Understand",
-    "llm_decision": "YES",
-    "llm_justification": "The topic is conceptually covered in the syllabus.",
-    "modules_detected": "['Introduction']",
-    "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
-  },
-  {
-    "question": "Analyze the role of artificial intelligence in healthcare diagnostics.",
-    "similarity_score": 0.7392591667175293,
-    "match_strength": "WEAK_MATCH",
-    "match_type": "DIRECT_SUBJECT_MATCH",
-    "bloom_level": "Analyze",
-    "llm_decision": "YES",
-    "llm_justification": "Artificial Intelligence in healthcare diagnostics is a topic within the field of Health Informatics and Machine Learning, which is closely related to Information Technology. The syllabus covers Machine Learning concepts and techniques, which are essential for AI applications in healthcare diagnostics.",
-    "modules_detected": "['Introduction']",
-    "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
-  },
-  {
-    "question": "Describe cloud resource allocation in distributed cloud systems.",
-    "similarity_score": 0.750603551864624,
-    "match_strength": "WEAK_MATCH",
-    "match_type": "DIRECT_SUBJECT_MATCH",
-    "bloom_level": "Understand",
-    "llm_decision": "YES",
-    "llm_justification": "The topic is conceptually covered in the syllabus.",
-    "modules_detected": "['Firewall', 'Introduction']",
-    "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
-  },
-  {
-    "question": "Describe big data analytics techniques for business intelligence.",
-    "similarity_score": 0.7867621930440267,
-    "match_strength": "WEAK_MATCH",
-    "match_type": "DIRECT_SUBJECT_MATCH",
-    "bloom_level": "Understand",
-    "llm_decision": "YES",
-    "llm_justification": "The topic is conceptually covered in the syllabus.",
-    "modules_detected": "['Introduction']",
-    "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
-  },
-  {
-    "question": "Explain natural language processing techniques in chatbots.",
-    "similarity_score": 0.79905166943868,
-    "match_strength": "PARTIAL_MATCH",
-    "match_type": "DIRECT_SUBJECT_MATCH",
-    "bloom_level": "Understand",
-    "llm_decision": "YES",
-    "llm_justification": "The topic is conceptually covered in the syllabus.",
-    "modules_detected": "['Introduction']",
-    "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
-  },
-  {
-    "question": "Describe federated learning in distributed AI systems.",
-    "similarity_score": 0.745216293334961,
-    "match_strength": "WEAK_MATCH",
-    "match_type": "DIRECT_SUBJECT_MATCH",
-    "bloom_level": "Understand",
-    "llm_decision": "YES",
-    "llm_justification": "The topic is explicitly listed in the syllabus.",
-    "modules_detected": "['Firewall', 'Introduction']",
-    "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
-  },
-  {
-    "question": "Explain image segmentation techniques in computer vision.",
-    "similarity_score": 0.7325854714711508,
-    "match_strength": "WEAK_MATCH",
-    "match_type": "DIRECT_SUBJECT_MATCH",
-    "bloom_level": "Understand",
-    "llm_decision": "YES",
-    "llm_justification": "The topic is explicitly listed in the syllabus.",
-    "modules_detected": "['Introduction']",
-    "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
-  },
-  {
-    "question": "Describe anomaly detection using machine learning algorithms.",
-    "similarity_score": 0.7712220995766776,
-    "match_strength": "WEAK_MATCH",
-    "match_type": "DIRECT_SUBJECT_MATCH",
-    "bloom_level": "Understand",
-    "llm_decision": "YES",
-    "llm_justification": "The topic is conceptually covered in the syllabus.",
-    "modules_detected": "['Introduction', 'Algorithm types & Modes']",
-    "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
-  },
-  {
-    "question": "Explain AI-based traffic prediction systems.",
-    "similarity_score": 0.7259332656860353,
-    "match_strength": "PARTIAL_MATCH",
-    "match_type": "DIRECT_SUBJECT_MATCH",
-    "bloom_level": "Understand",
-    "llm_decision": "YES",
-    "llm_justification": "The topic is explicitly listed in the syllabus.",
-    "modules_detected": "['Firewall', 'Introduction']",
-    "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
-  },
-  {
     "question": "Explain quantum computing algorithms for cryptanalysis.",
     "similarity_score": 0.8141938781738282,
     "match_strength": "PARTIAL_MATCH",
@@ -107,17 +8,6 @@
     "llm_decision": "YES",
     "llm_justification": "The topic is conceptually covered in the syllabus.",
     "modules_detected": "['Introduction', 'Algorithm types & Modes']",
-    "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
-  },
-  {
-    "question": "Explain IoT sensor fusion techniques.",
-    "similarity_score": 0.7468369102478027,
-    "match_strength": "PARTIAL_MATCH",
-    "match_type": "DIRECT_SUBJECT_MATCH",
-    "bloom_level": "Understand",
-    "llm_decision": "YES",
-    "llm_justification": "The topic is explicitly listed in the syllabus.",
-    "modules_detected": "['Internet Security Protocols', 'Introduction']",
     "diagnosis": "OUT-OF-SYLLABUS question was incorrectly ACCEPTED."
   }
 ]

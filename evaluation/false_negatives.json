@@ -31,5 +31,16 @@
     "llm_justification": null,
     "modules_detected": "['Introduction', 'Electronic Mail Security']",
     "diagnosis": "IN-SYLLABUS question was incorrectly REJECTED."
+  },
+  {
+    "question": "Explain the concept of access control.",
+    "similarity_score": 0.7846230697631836,
+    "match_strength": "WEAK_MATCH",
+    "match_type": "OUT_OF_CURRICULUM",
+    "bloom_level": "Unknown",
+    "llm_decision": null,
+    "llm_justification": null,
+    "modules_detected": "[]",
+    "diagnosis": "IN-SYLLABUS question was incorrectly REJECTED."
   }
 ]
