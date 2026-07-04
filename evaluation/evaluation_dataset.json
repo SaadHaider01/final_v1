@@ -1,0 +1,410 @@
+[
+  {
+    "question": "Define symmetric key cryptography.",
+    "expected": true
+  },
+  {
+    "question": "What is asymmetric encryption?",
+    "expected": true
+  },
+  {
+    "question": "Explain the purpose of digital signatures.",
+    "expected": true
+  },
+  {
+    "question": "What is plaintext and ciphertext?",
+    "expected": true
+  },
+  {
+    "question": "Describe the role of firewalls in network security.",
+    "expected": true
+  },
+  {
+    "question": "What is user authentication?",
+    "expected": true
+  },
+  {
+    "question": "Explain message authentication codes.",
+    "expected": true
+  },
+  {
+    "question": "What is a hash function?",
+    "expected": true
+  },
+  {
+    "question": "Define cryptanalysis.",
+    "expected": true
+  },
+  {
+    "question": "Explain substitution cipher techniques.",
+    "expected": true
+  },
+  {
+    "question": "Explain transposition cipher techniques.",
+    "expected": true
+  },
+  {
+    "question": "What is the purpose of SSL protocol?",
+    "expected": true
+  },
+  {
+    "question": "Define public key infrastructure.",
+    "expected": true
+  },
+  {
+    "question": "What is a digital certificate?",
+    "expected": true
+  },
+  {
+    "question": "Explain the concept of confidentiality in information security.",
+    "expected": true
+  },
+  {
+    "question": "Define integrity in network security.",
+    "expected": true
+  },
+  {
+    "question": "What is non-repudiation?",
+    "expected": true
+  },
+  {
+    "question": "Explain the concept of access control.",
+    "expected": true
+  },
+  {
+    "question": "What is a brute force attack?",
+    "expected": true
+  },
+  {
+    "question": "Explain replay attacks in network security.",
+    "expected": true
+  },
+  {
+    "question": "Compare symmetric and asymmetric encryption techniques.",
+    "expected": true
+  },
+  {
+    "question": "Differentiate between DES and AES.",
+    "expected": true
+  },
+  {
+    "question": "Compare DES and RC5 encryption algorithms.",
+    "expected": true
+  },
+  {
+    "question": "Explain how RSA supports secure communication.",
+    "expected": true
+  },
+  {
+    "question": "Analyze the importance of digital signatures in secure communication.",
+    "expected": true
+  },
+  {
+    "question": "Explain how firewalls protect organizational networks.",
+    "expected": true
+  },
+  {
+    "question": "Analyze the role of hash functions in ensuring data integrity.",
+    "expected": true
+  },
+  {
+    "question": "Compare stream ciphers and block ciphers.",
+    "expected": true
+  },
+  {
+    "question": "Explain how authentication tokens improve security.",
+    "expected": true
+  },
+  {
+    "question": "Analyze the advantages of biometric authentication.",
+    "expected": true
+  },
+  {
+    "question": "Compare certificate-based authentication and password-based authentication.",
+    "expected": true
+  },
+  {
+    "question": "Explain the working of public key cryptography.",
+    "expected": true
+  },
+  {
+    "question": "Analyze the importance of user authentication in distributed systems.",
+    "expected": true
+  },
+  {
+    "question": "Explain how message digest algorithms detect tampering.",
+    "expected": true
+  },
+  {
+    "question": "Compare private key and public key cryptography.",
+    "expected": true
+  },
+  {
+    "question": "Explain the purpose of session keys in secure communication.",
+    "expected": true
+  },
+  {
+    "question": "Analyze the role of firewalls in preventing unauthorized access.",
+    "expected": true
+  },
+  {
+    "question": "Compare intrusion detection and firewall mechanisms.",
+    "expected": true
+  },
+  {
+    "question": "Explain the significance of key management in cryptography.",
+    "expected": true
+  },
+  {
+    "question": "Analyze how digital signatures help prevent message tampering.",
+    "expected": true
+  },
+  {
+    "question": "Explain how SSL enhances web security.",
+    "expected": true
+  },
+  {
+    "question": "Analyze the limitations of symmetric key cryptography.",
+    "expected": true
+  },
+  {
+    "question": "Compare authentication and authorization mechanisms.",
+    "expected": true
+  },
+  {
+    "question": "Explain the purpose of challenge-response authentication.",
+    "expected": true
+  },
+  {
+    "question": "Analyze the importance of encryption in e-commerce systems.",
+    "expected": true
+  },
+  {
+    "question": "Explain the role of certificate authorities in PKI.",
+    "expected": true
+  },
+  {
+    "question": "Compare one-way hash functions and encryption algorithms.",
+    "expected": true
+  },
+  {
+    "question": "Explain the working principle of RSA algorithm.",
+    "expected": true
+  },
+  {
+    "question": "Analyze the importance of secure key exchange mechanisms.",
+    "expected": true
+  },
+  {
+    "question": "Explain the significance of confidentiality, integrity, and availability.",
+    "expected": true
+  },
+  {
+    "question": "Evaluate the effectiveness of SSL in protecting web communication.",
+    "expected": true
+  },
+  {
+    "question": "Design a secure authentication framework for a university portal.",
+    "expected": true
+  },
+  {
+    "question": "Evaluate the strengths and weaknesses of symmetric key cryptography.",
+    "expected": true
+  },
+  {
+    "question": "Design a layered network security strategy using firewalls and authentication mechanisms.",
+    "expected": true
+  },
+  {
+    "question": "Analyze how cryptography supports secure online banking.",
+    "expected": true
+  },
+  {
+    "question": "Evaluate the role of digital signatures in electronic transactions.",
+    "expected": true
+  },
+  {
+    "question": "Design a secure file transfer mechanism using encryption techniques.",
+    "expected": true
+  },
+  {
+    "question": "Evaluate the importance of access control in organizational security.",
+    "expected": true
+  },
+  {
+    "question": "Analyze the effectiveness of biometric authentication systems.",
+    "expected": true
+  },
+  {
+    "question": "Design a secure communication model using RSA and digital signatures.",
+    "expected": true
+  },
+  {
+    "question": "Explain blockchain consensus mechanisms in Bitcoin networks.",
+    "expected": false
+  },
+  {
+    "question": "Design a neural network for malware image classification.",
+    "expected": false
+  },
+  {
+    "question": "Explain the working of Kubernetes orchestration architecture.",
+    "expected": false
+  },
+  {
+    "question": "Describe Hadoop distributed file system architecture.",
+    "expected": false
+  },
+  {
+    "question": "Explain recommendation systems used in e-commerce platforms.",
+    "expected": false
+  },
+  {
+    "question": "Analyze gradient descent optimization in deep learning.",
+    "expected": false
+  },
+  {
+    "question": "Explain the architecture of autonomous vehicle navigation systems.",
+    "expected": false
+  },
+  {
+    "question": "Describe machine learning approaches for sentiment analysis.",
+    "expected": false
+  },
+  {
+    "question": "Explain convolutional neural networks used in image recognition.",
+    "expected": false
+  },
+  {
+    "question": "Analyze the role of artificial intelligence in healthcare diagnostics.",
+    "expected": false
+  },
+  {
+    "question": "Describe cloud resource allocation in distributed cloud systems.",
+    "expected": false
+  },
+  {
+    "question": "Explain reinforcement learning in robotics applications.",
+    "expected": false
+  },
+  {
+    "question": "Analyze blockchain smart contract vulnerabilities.",
+    "expected": false
+  },
+  {
+    "question": "Explain containerization using Docker and Kubernetes.",
+    "expected": false
+  },
+  {
+    "question": "Describe big data analytics techniques for business intelligence.",
+    "expected": false
+  },
+  {
+    "question": "Analyze neural network overfitting problems in AI systems.",
+    "expected": false
+  },
+  {
+    "question": "Explain edge computing architectures for IoT systems.",
+    "expected": false
+  },
+  {
+    "question": "Describe predictive analytics in recommendation engines.",
+    "expected": false
+  },
+  {
+    "question": "Explain natural language processing techniques in chatbots.",
+    "expected": false
+  },
+  {
+    "question": "Analyze deep learning approaches for autonomous drones.",
+    "expected": false
+  },
+  {
+    "question": "Explain cryptocurrency mining mechanisms in blockchain systems.",
+    "expected": false
+  },
+  {
+    "question": "Describe federated learning in distributed AI systems.",
+    "expected": false
+  },
+  {
+    "question": "Explain virtualization in cloud computing environments.",
+    "expected": false
+  },
+  {
+    "question": "Analyze cyber-physical systems in smart manufacturing.",
+    "expected": false
+  },
+  {
+    "question": "Explain image segmentation techniques in computer vision.",
+    "expected": false
+  },
+  {
+    "question": "Describe anomaly detection using machine learning algorithms.",
+    "expected": false
+  },
+  {
+    "question": "Explain swarm intelligence in robotic systems.",
+    "expected": false
+  },
+  {
+    "question": "Analyze transfer learning in deep neural networks.",
+    "expected": false
+  },
+  {
+    "question": "Explain AI-based traffic prediction systems.",
+    "expected": false
+  },
+  {
+    "question": "Describe cloud-native microservice architectures.",
+    "expected": false
+  },
+  {
+    "question": "Explain graph neural networks in recommendation systems.",
+    "expected": false
+  },
+  {
+    "question": "Analyze large language models in conversational AI systems.",
+    "expected": false
+  },
+  {
+    "question": "Explain quantum computing algorithms for cryptanalysis.",
+    "expected": false
+  },
+  {
+    "question": "Describe federated blockchain architectures.",
+    "expected": false
+  },
+  {
+    "question": "Explain IoT sensor fusion techniques.",
+    "expected": false
+  },
+  {
+    "question": "Analyze ARIMA forecasting in time series prediction.",
+    "expected": false
+  },
+  {
+    "question": "Describe GPU acceleration in deep learning systems.",
+    "expected": false
+  },
+  {
+    "question": "Explain robotic path planning algorithms.",
+    "expected": false
+  },
+  {
+    "question": "Analyze transformer architectures in NLP.",
+    "expected": false
+  },
+  {
+    "question": "Describe distributed ledger technologies in fintech systems.",
+    "expected": false
+  },
+  {
+    "question": "Explain cloud autoscaling strategies.",
+    "expected": false
+  },
+  {
+    "question": "Analyze recommendation engine personalization techniques.",
+    "expected": false
+  }
+]

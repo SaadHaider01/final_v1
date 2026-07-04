@@ -139,26 +139,27 @@ function Playground() {
             )}
 
             {/* Syllabus List */}
-            {syllabusOptions.length > 0 && (
-              <div className="card mt-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-semibold">Available Syllabi ({syllabusOptions.length})</h3>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={handleResetDb}
-                      className="text-xs font-medium text-orange-600 hover:text-orange-800 bg-orange-50 px-2 py-1 rounded border border-orange-100 transition-colors"
-                      title="Wipe all vectors from ChromaDB (use when data is polluted)"
-                    >
-                      Reset DB
-                    </button>
-                    <button 
-                      onClick={handlePurgeAll}
-                      className="text-xs font-medium text-red-600 hover:text-red-800 bg-red-50 px-2 py-1 rounded border border-red-100 transition-colors"
-                    >
-                      Purge All
-                    </button>
-                  </div>
+            <div className="card mt-6">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-semibold">Available Syllabi ({syllabusOptions.length})</h3>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={handleResetDb}
+                    className="text-xs font-medium text-orange-600 hover:text-orange-800 bg-orange-50 px-2 py-1 rounded border border-orange-100 transition-colors"
+                    title="Wipe all vectors from ChromaDB (use when data is polluted)"
+                  >
+                    Reset DB
+                  </button>
+                  <button 
+                    onClick={handlePurgeAll}
+                    className="text-xs font-medium text-red-600 hover:text-red-800 bg-red-50 px-2 py-1 rounded border border-red-100 transition-colors"
+                  >
+                    Purge All
+                  </button>
                 </div>
+              </div>
+              
+              {syllabusOptions.length > 0 ? (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {syllabusOptions.map((syllabus) => (
                     <div
@@ -204,8 +205,12 @@ function Playground() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-sm text-gray-500 py-4 text-center">
+                  No syllabi available.
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Column - Results */}

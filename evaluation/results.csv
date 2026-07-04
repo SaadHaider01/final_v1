@@ -1,0 +1,103 @@
+question,expected,predicted,similarity_score,bloom_level,match_strength,match_type,is_correct
+Define symmetric key cryptography.,True,True,0.9306359322865804,Remember,STRONG_MATCH,DIRECT_SUBJECT_MATCH,True
+What is asymmetric encryption?,True,True,0.9084572347005209,Remember,STRONG_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain the purpose of digital signatures.,True,True,0.812805814743042,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+What is plaintext and ciphertext?,True,True,0.8000787035624186,Remember,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Describe the role of firewalls in network security.,True,True,0.8280968284606934,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+What is user authentication?,True,True,0.8912343533833822,Remember,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain message authentication codes.,True,True,0.7655088996887207,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+What is a hash function?,True,True,0.8969928773244222,Remember,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Define cryptanalysis.,True,False,0.7203610992431642,Remember,PARTIAL_MATCH,OUT_OF_CURRICULUM,False
+Explain substitution cipher techniques.,True,True,0.9008881187438966,Understand,STRONG_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain transposition cipher techniques.,True,True,0.9654602241516114,Understand,STRONG_MATCH,DIRECT_SUBJECT_MATCH,True
+What is the purpose of SSL protocol?,True,True,0.8493151537577311,Remember,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Define public key infrastructure.,True,False,0.7110760307312012,Remember,NO_MATCH,OUT_OF_CURRICULUM,False
+What is a digital certificate?,True,True,0.8052078119913737,Remember,WEAK_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain the concept of confidentiality in information security.,True,True,0.8250731086730958,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Define integrity in network security.,True,True,0.8236119461059571,Remember,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+What is non-repudiation?,True,False,0.5748897552490234,Remember,NO_MATCH,OUT_OF_CURRICULUM,False
+Explain the concept of access control.,True,True,0.7846230697631836,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+What is a brute force attack?,True,True,0.7267273521423341,Remember,WEAK_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain replay attacks in network security.,True,True,0.8150623893737794,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Compare symmetric and asymmetric encryption techniques.,True,True,0.9060322952270508,Analyze,STRONG_MATCH,DIRECT_SUBJECT_MATCH,True
+Differentiate between DES and AES.,True,True,0.7767770957946778,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Compare DES and RC5 encryption algorithms.,True,True,0.8734091631571452,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain how RSA supports secure communication.,True,True,0.785464210510254,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze the importance of digital signatures in secure communication.,True,True,0.8012674363454183,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain how firewalls protect organizational networks.,True,True,0.7888580513000488,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze the role of hash functions in ensuring data integrity.,True,True,0.7922232001168388,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Compare stream ciphers and block ciphers.,True,True,0.7706725311279298,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain how authentication tokens improve security.,True,True,0.8652970790863038,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze the advantages of biometric authentication.,True,True,0.8736680221557618,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Compare certificate-based authentication and password-based authentication.,True,True,0.9488240051269532,Analyze,STRONG_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain the working of public key cryptography.,True,True,0.8440516662597657,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze the importance of user authentication in distributed systems.,True,True,0.8296373716990153,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain how message digest algorithms detect tampering.,True,True,0.8700091552734375,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Compare private key and public key cryptography.,True,True,0.8430276584625245,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain the purpose of session keys in secure communication.,True,True,0.7936583073933919,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze the role of firewalls in preventing unauthorized access.,True,True,0.7762711715698243,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Compare intrusion detection and firewall mechanisms.,True,True,0.826857385635376,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain the significance of key management in cryptography.,True,True,0.8324746322631836,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze how digital signatures help prevent message tampering.,True,True,0.8177990899767195,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain how SSL enhances web security.,True,True,0.8553830019632975,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze the limitations of symmetric key cryptography.,True,True,0.8891375732421876,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Compare authentication and authorization mechanisms.,True,True,0.7637506103515626,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain the purpose of challenge-response authentication.,True,True,0.7349953174591066,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze the importance of encryption in e-commerce systems.,True,True,0.8054365730285645,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain the role of certificate authorities in PKI.,True,True,0.8013364505767823,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Compare one-way hash functions and encryption algorithms.,True,True,0.8592571735382081,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain the working principle of RSA algorithm.,True,True,0.8453067970275879,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze the importance of secure key exchange mechanisms.,True,True,0.7923993301391602,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+"Explain the significance of confidentiality, integrity, and availability.",True,True,0.7733129692077637,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Evaluate the effectiveness of SSL in protecting web communication.,True,True,0.7689568710327149,Evaluate,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Design a secure authentication framework for a university portal.,True,True,0.8036901505788168,Create,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Evaluate the strengths and weaknesses of symmetric key cryptography.,True,True,0.870600461959839,Evaluate,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Design a layered network security strategy using firewalls and authentication mechanisms.,True,True,0.81739654329088,Create,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze how cryptography supports secure online banking.,True,True,0.7603064473470051,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Evaluate the role of digital signatures in electronic transactions.,True,True,0.7895855935414633,Evaluate,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Design a secure file transfer mechanism using encryption techniques.,True,True,0.8337132167816163,Create,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Evaluate the importance of access control in organizational security.,True,True,0.804574302037557,Evaluate,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Analyze the effectiveness of biometric authentication systems.,True,True,0.8485494136810304,Analyze,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Design a secure communication model using RSA and digital signatures.,True,True,0.8077571719033378,Create,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,True
+Explain blockchain consensus mechanisms in Bitcoin networks.,False,False,0.7081005668640137,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Design a neural network for malware image classification.,False,False,0.788686850865682,Create,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Explain the working of Kubernetes orchestration architecture.,False,False,0.6824583625793457,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Describe Hadoop distributed file system architecture.,False,False,0.6842931365966798,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Explain recommendation systems used in e-commerce platforms.,False,False,0.6916740036010742,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Analyze gradient descent optimization in deep learning.,False,False,0.6763477420806885,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
+Explain the architecture of autonomous vehicle navigation systems.,False,False,0.6989814376831056,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Describe machine learning approaches for sentiment analysis.,False,True,0.7720338376363118,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Explain convolutional neural networks used in image recognition.,False,False,0.6836876487731933,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Analyze the role of artificial intelligence in healthcare diagnostics.,False,True,0.7392591667175293,Analyze,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Describe cloud resource allocation in distributed cloud systems.,False,True,0.750603551864624,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Explain reinforcement learning in robotics applications.,False,False,0.685295639038086,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Analyze blockchain smart contract vulnerabilities.,False,False,0.6943815803527833,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
+Explain containerization using Docker and Kubernetes.,False,False,0.7011198616027832,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Describe big data analytics techniques for business intelligence.,False,True,0.7867621930440267,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Analyze neural network overfitting problems in AI systems.,False,False,0.6988814767201741,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
+Explain edge computing architectures for IoT systems.,False,False,0.7100643730163574,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Describe predictive analytics in recommendation engines.,False,False,0.7340157222747803,Understand,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Explain natural language processing techniques in chatbots.,False,True,0.79905166943868,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,False
+Analyze deep learning approaches for autonomous drones.,False,False,0.7161959107716878,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
+Explain cryptocurrency mining mechanisms in blockchain systems.,False,False,0.7227148151397706,Understand,PARTIAL_MATCH,OUT_OF_CURRICULUM,True
+Describe federated learning in distributed AI systems.,False,True,0.745216293334961,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Explain virtualization in cloud computing environments.,False,False,0.7003786659240723,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Analyze cyber-physical systems in smart manufacturing.,False,False,0.6933308696746827,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
+Explain image segmentation techniques in computer vision.,False,True,0.7325854714711508,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Describe anomaly detection using machine learning algorithms.,False,True,0.7712220995766776,Understand,WEAK_MATCH,DIRECT_SUBJECT_MATCH,False
+Explain swarm intelligence in robotic systems.,False,False,0.6890263175964355,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Analyze transfer learning in deep neural networks.,False,False,0.6899330711364746,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
+Explain AI-based traffic prediction systems.,False,True,0.7259332656860353,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,False
+Describe cloud-native microservice architectures.,False,False,0.7520255279541016,Understand,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Explain graph neural networks in recommendation systems.,False,False,0.6823785400390625,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Analyze large language models in conversational AI systems.,False,False,0.6778623199462892,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
+Explain quantum computing algorithms for cryptanalysis.,False,True,0.8141938781738282,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,False
+Describe federated blockchain architectures.,False,False,0.7634022903442383,Understand,PARTIAL_MATCH,OUT_OF_CURRICULUM,True
+Explain IoT sensor fusion techniques.,False,True,0.7468369102478027,Understand,PARTIAL_MATCH,DIRECT_SUBJECT_MATCH,False
+Analyze ARIMA forecasting in time series prediction.,False,False,0.6687236404418946,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
+Describe GPU acceleration in deep learning systems.,False,False,0.744837350845337,Understand,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Explain robotic path planning algorithms.,False,False,0.7211583137512207,Understand,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Analyze transformer architectures in NLP.,False,False,0.6943775272369386,Analyze,NO_MATCH,OUT_OF_CURRICULUM,True
+Describe distributed ledger technologies in fintech systems.,False,False,0.7498662662506104,Understand,WEAK_MATCH,OUT_OF_CURRICULUM,True
+Explain cloud autoscaling strategies.,False,False,0.699831018447876,Understand,NO_MATCH,OUT_OF_CURRICULUM,True
+Analyze recommendation engine personalization techniques.,False,False,0.7212630271911622,Analyze,WEAK_MATCH,OUT_OF_CURRICULUM,True

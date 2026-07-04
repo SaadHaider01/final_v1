@@ -1,0 +1,35 @@
+[
+  {
+    "question": "Define cryptanalysis.",
+    "similarity_score": 0.7203610992431642,
+    "match_strength": "PARTIAL_MATCH",
+    "match_type": "OUT_OF_CURRICULUM",
+    "bloom_level": "Remember",
+    "llm_decision": "NO",
+    "llm_justification": "The topic is not explicitly mentioned in the syllabus.",
+    "modules_detected": "['Introduction', 'Algorithm types & Modes']",
+    "diagnosis": "IN-SYLLABUS question was incorrectly REJECTED."
+  },
+  {
+    "question": "Define public key infrastructure.",
+    "similarity_score": 0.7110760307312012,
+    "match_strength": "NO_MATCH",
+    "match_type": "OUT_OF_CURRICULUM",
+    "bloom_level": "Remember",
+    "llm_decision": null,
+    "llm_justification": null,
+    "modules_detected": "['Introduction', 'Firewall']",
+    "diagnosis": "IN-SYLLABUS question was incorrectly REJECTED."
+  },
+  {
+    "question": "What is non-repudiation?",
+    "similarity_score": 0.5748897552490234,
+    "match_strength": "NO_MATCH",
+    "match_type": "OUT_OF_CURRICULUM",
+    "bloom_level": "Remember",
+    "llm_decision": null,
+    "llm_justification": null,
+    "modules_detected": "['Introduction', 'Electronic Mail Security']",
+    "diagnosis": "IN-SYLLABUS question was incorrectly REJECTED."
+  }
+]
