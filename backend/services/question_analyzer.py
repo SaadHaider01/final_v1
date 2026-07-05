@@ -2,6 +2,7 @@
 from validators.syllabus_validator import validate_question
 from services.module_detector import detect_modules
 from services.bloom_classifier import classify_bloom
+from debug_logger import dsection, dlog, dlist, derror, ddivider
 
 
 # ── Retrieval confidence thresholds ────────────────────────────────────────────
@@ -61,6 +62,20 @@ def analyze_question(
     if syllabus_meta is None:
         syllabus_meta = {}
 
+    # ── DEBUG: Section 7 — Analysis start ──────────────────────────────────
+    dsection("Analysis")
+    dlog("Analysis", "Question", question[:120])
+    dlog("Analysis", "Syllabus ID", syllabus_id or "(global search)")
+    dlog("Analysis", "Similarity", f"{similarity:.4f}")
+    dlog("Analysis", "Threshold",  f"{threshold:.4f}")
+    dlog("Analysis", "Chunks retrieved", len(top_chunks))
+    if top_chunks:
+        for i, ch in enumerate(top_chunks[:3]):   # show top 3
+            dlog("Analysis", f"  Chunk {i+1} similarity",
+                 f"{ch.get('similarity', 0):.4f}  module={ch.get('module','?')!r:20s}  "
+                 f"concept_boost={ch.get('concept_boost', 0):.3f}")
+    # ──────────────────────────────────────────────────────────────────
+
     # --------------------------------------------------------
     # Feature 1: Multi-module detection (always runs — fast)
     # --------------------------------------------------------
@@ -70,6 +85,12 @@ def analyze_question(
     # Feature 2: Bloom + difficulty (always runs — pure regex)
     # --------------------------------------------------------
     bloom_result = classify_bloom(question)
+    # ── DEBUG: Section 9 — Bloom ────────────────────────────────────────
+    dsection("Bloom")
+    dlog("Bloom", "Question",    question[:80])
+    dlog("Bloom", "Bloom Level", bloom_result["bloom_level"])
+    dlog("Bloom", "Difficulty",  bloom_result["difficulty"])
+    # ──────────────────────────────────────────────────────────────────
 
     # --------------------------------------------------------
     # Feature 3: CO mapping (only if CoMapper provided)
@@ -93,6 +114,13 @@ def analyze_question(
     is_no_match      = match_strength == "NO_MATCH"
     retrieval_status = "NO_MATCH" if is_no_match else "MATCH_FOUND"
 
+    # ── DEBUG: Gate 1 result ─────────────────────────────────────────────
+    dsection("Gate 1 — Similarity")
+    dlog("Gate1", "Match Strength",  match_strength)
+    dlog("Gate1", "Match Type",      match_type)
+    dlog("Gate1", "Retrieval Status", retrieval_status)
+    # ──────────────────────────────────────────────────────────────────
+
     # --------------------------------------------------------
     # Gatekeeper logic (user-supplied threshold, default 0.80)
     # --------------------------------------------------------
@@ -100,6 +128,7 @@ def analyze_question(
 
     # STEP 7: Hard NO_MATCH behavior — never leak weak chunks to the frontend
     if is_no_match or not gatekeeper_passed:
+        dlog("Gate1", "Gatekeeper", "FAILED — similarity below threshold, returning OUT_OF_CURRICULUM")
         return {
             # Existing keys
             "is_in_syllabus":    False,
@@ -129,6 +158,15 @@ def analyze_question(
         similarity=similarity,
         threshold=threshold,
     )
+
+    # ── DEBUG: Gate 2 — LLM Decision ─────────────────────────────────────
+    dsection("Gate 2 — LLM")
+    dlog("Gate2", "LLM Decision",       "IN SYLLABUS" if llm_res.get('is_in_syllabus') else "NOT IN SYLLABUS")
+    dlog("Gate2", "Curriculum Relevant", llm_res.get('curriculum_relevance', '?'))
+    dlog("Gate2", "Strict Match",        llm_res.get('strict_syllabus_match', '?'))
+    dlog("Gate2", "Rejection Reason",    llm_res.get('rejection_reason', 'none'))
+    dlog("Gate2", "Justification",       str(llm_res.get('llm_justification', ''))[:120])
+    # ──────────────────────────────────────────────────────────────────
 
     is_in = llm_res.get("is_in_syllabus", False)
 

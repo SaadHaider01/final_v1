@@ -23,6 +23,7 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from services.bloom_classifier import classify_bloom
+from debug_logger import dsection, dlog, dlist, dtable, dsummary, derror, ddivider
 
 # Helper imports from segmenter (resolved dynamically to avoid circular import)
 def _get_segmenter_helpers():
@@ -157,25 +158,36 @@ def _parse_outcomes_with_bloom(out_text: str) -> List[Dict[str, str]]:
     """Parse outcomes into structured list and classify Bloom levels."""
     outcomes = []
     lines = [l.strip() for l in out_text.split("\n") if l.strip()]
-    co_index = 1
+    raw_outcomes = []
+    current_co_text = ""
     
     for line in lines:
+        # Match CO1, CO2, or just numbers at start of line
         match_co = re.match(r"^\s*(?:CO\d+|[0-9]+)\s*[:\.]?\s*(.+)", line, re.IGNORECASE)
         if match_co:
-            co_id = f"CO{co_index}"
-            co_text = match_co.group(1).strip()
+            if current_co_text:
+                raw_outcomes.append(current_co_text)
+            current_co_text = match_co.group(1).strip()
         else:
-            co_id = f"CO{co_index}"
-            co_text = line
-            
-        co_index += 1
+            if current_co_text:
+                current_co_text += " " + line
+            else:
+                current_co_text = line
+                
+    if current_co_text:
+        raw_outcomes.append(current_co_text)
+        
+    print("Entered OUTCOMES")
+    for i, co_text in enumerate(raw_outcomes, 1):
+        print(f"Detected CO{i}")
         bloom = classify_bloom(co_text)
         outcomes.append({
-            "co":          co_id,
+            "co":          f"CO{i}",
             "text":        co_text,
             "bloom_level": bloom["bloom_level"],
             "difficulty":  bloom["difficulty"]
         })
+    print(f"Final CO count:\n{len(outcomes)}")
     return outcomes
 
 
@@ -233,14 +245,21 @@ def _parse_units_separately(units_lines: List[str]) -> List[Dict[str, Any]]:
     units = []
     current_unit = None
     _UNIT_HEADER_RE = re.compile(r"^\s*(?:Unit|Module|Chapter)\s*(\d+|[IVXLC]+)\s*[:\-–]?\s*(.*)", re.IGNORECASE)
+    _TABLE_HEADER_RE = re.compile(r"^\s*(?:Syllabus\s*Content|Content\s*Hrs/Unit|ontent\s*Hrs/Unit)\s*$", re.IGNORECASE)
     
+    print("Entered SYLLABUS")
     for line in units_lines:
+        if _TABLE_HEADER_RE.match(line):
+            print(f"Ignoring header:\n\"{line}\"")
+            continue
+            
         match = _UNIT_HEADER_RE.match(line)
         if match:
             if current_unit:
                 units.append(current_unit)
             unit_num   = match.group(1).strip()
             unit_title = match.group(2).strip()
+            print(f"Detected Unit {unit_num}")
             current_unit = {
                 "unit":          unit_num,
                 "title":         unit_title if unit_title else f"Unit {unit_num}",
@@ -305,9 +324,10 @@ def check_trigger(line: str) -> Optional[str]:
        re.search(r"Correlation\s*Matrix", l, re.IGNORECASE):
         return "MAPPING"
 
-    # SYLLABUS: standalone "Units", "Syllabus", "Modules" or "University Syllabus:"
+    # SYLLABUS: standalone "Units", "Syllabus", "Modules" or "University Syllabus:" or "Unit 1:"
     if re.match(r"^(?:Units?|Syllabus|Modules?)\s*[:\-–]?$", l, re.IGNORECASE) or \
-       re.search(r"University\s*Syllabus\s*[:\-–]", l, re.IGNORECASE):
+       re.search(r"University\s*Syllabus\s*[:\-–]", l, re.IGNORECASE) or \
+       re.match(r"^\s*(?:Unit|Module|Chapter)\s*(\d+|[IVXLC]+)\s*[:\-–]?", l, re.IGNORECASE):
         return "SYLLABUS"
 
     # REFERENCES: "References", "Reference Books", "Text Books", etc.
@@ -319,8 +339,12 @@ def check_trigger(line: str) -> Optional[str]:
 
 def clean_inline_content(line: str, trigger_name: str) -> str:
     """Removes the trigger keyword and clean trailing prefix punctuation."""
+    # Do not strip Unit/Module headers so _parse_units_separately can detect them
+    if trigger_name == "SYLLABUS" and re.match(r"^\s*(?:Unit|Module|Chapter)\b", line, re.IGNORECASE):
+        return line.strip()
+        
     cleaned = re.sub(
-        r"^\s*(?:Course\s*Objectives?|Objectives?|Course\s*Outcomes?|Outcomes?|CO-PO\s*Mapping|CO\s*PO\s*Mapping|CO-PO\s*Correlation|Units|Unit|Modules|Module|Syllabus|References?|Suggested\s*Readings?|Bibliography)",
+        r"^\s*(?:Course\s*Objectives?|Objectives?|Course\s*Outcomes?|Outcomes?|CO-PO\s*Mapping|CO\s*PO\s*Mapping|CO-PO\s*Correlation|Units|Syllabus|References?|Suggested\s*Readings?|Bibliography)",
         "",
         line,
         flags=re.IGNORECASE
@@ -418,17 +442,48 @@ def parse_aicte_curriculum(text: str) -> List[Dict[str, Any]]:
             "references":        ref_text
         }
         
-        # Log metadata details to console as requested
-        print("Detected Course:")
-        print(current_course["title"])
-        print("Code:")
-        print(current_course["code"])
-        print("Semester:")
-        print(sem_roman)
-        print("Detected CO count:")
-        print(len(outcomes))
-        print("Detected PO mappings:")
-        print(len(co_po))
+        # ── DEBUG: Parser detail (Section 4 + 5) ──────────────────────────
+        dsection("Parser")
+        dlog("Parser", "Course Title",   current_course["title"] or "(not extracted)")
+        dlog("Parser", "Course Code",    current_course["code"]  or "(not extracted)")
+        dlog("Parser", "Semester",       sem_roman)
+        dlog("Parser", "Department",     dept)
+        dlog("Parser", "Program",        prog)
+        dlog("Parser", "Elective Type",  el_type)
+        dlog("Parser", "Syllabus ID",    sid)
+        ddivider()
+        dlog("Parser", "Objectives",     f"{len(obj_text.splitlines())} lines" if obj_text else "NOT FOUND")
+        dlog("Parser", "CO count",       len(outcomes))
+        if outcomes:
+            co_ids = [c["co"] for c in outcomes]
+            dlist("Parser", "CO IDs", co_ids)
+        else:
+            derror("Parser", "No COURSE OUTCOMES section found",
+                   "check if 'Course Outcomes' / 'COURSEOUTCOMES' header appears in the block")
+        dlog("Parser", "Unit count",     len(units))
+        if units:
+            unit_titles = [u.get("title") or f"Unit {u.get('unit','?')}" for u in units]
+            dlist("Parser", "Units", unit_titles)
+        else:
+            derror("Parser", "No unit/module sections found",
+                   "check if 'Unit 1 / Module 1 / University Syllabus:' header appears in the block")
+        dlog("Parser", "References",     "found" if ref_text else "NOT FOUND")
+        ddivider()
+        # CO-PO Mapping table (Section 5)
+        if co_po:
+            dlog("Parser", "CO-PO rows", len(co_po))
+            for co_id, po_dict in co_po.items():
+                po_str = "  ".join(f"{k}={v}" for k, v in sorted(po_dict.items()))
+                dlog("Parser", f"  {co_id}", po_str)
+        else:
+            derror("Parser", "CO-PO mapping table not found",
+                   "check if 'Mapping of COs with POs' / 'CO-PO Mapping' header appears in the block")
+        if warnings:
+            dlist("Parser", "Warnings", warnings)
+        else:
+            dlog("Parser", "Warnings", "None")
+        dlog("Parser", "Status", "SUCCESS" if outcomes or units else "PARTIAL")
+        # ──────────────────────────────────────────────────────────────────
         
         courses.append({
             "syllabus_id":              sid,
@@ -510,6 +565,11 @@ def parse_aicte_curriculum(text: str) -> List[Dict[str, Any]]:
                 state = "HEADER"
             else:
                 if current_course:
+                    if state == "OUTCOMES" and trigger != "OUTCOMES":
+                        print(f"Leaving OUTCOMES\nReason:\nFound header\n\"{line.strip()}\"")
+                    if state == "SYLLABUS" and trigger != "SYLLABUS":
+                        print(f"Leaving SYLLABUS\nReason:\nFound header\n\"{line.strip()}\"")
+
                     state = trigger
                     raw_lines.append(line)
                     # Check for inline content in trigger header
@@ -549,5 +609,32 @@ def parse_aicte_curriculum(text: str) -> List[Dict[str, Any]]:
     # Save the last parsed course block
     finalize_current_course()
     
+    # ── DEBUG: Ingestion Summary (Section 10) ──────────────────────────────
+    if courses:
+        for c in courses:
+            p = c.get("parsed", {})
+            dsummary(
+                f"Ingestion Summary — {c['subject_name']}",
+                {
+                    "Parser":      c.get("parser", "AICTE"),
+                    "Syllabus ID": c["syllabus_id"],
+                    "Course":      c["subject_name"],
+                    "Code":        c["subject_code"],
+                    "Department":  c["department"],
+                    "Semester":    c["semester"],
+                    "Program":     c.get("program", "-"),
+                    "COs":         len(p.get("course_outcomes", [])),
+                    "PO Rows":     len(p.get("co_po_mapping", {})),
+                    "Units":       len(p.get("units", [])),
+                    "References":  "yes" if p.get("references") else "none",
+                    "Warnings":    ", ".join(c.get("warnings", [])) or "None",
+                    "Confidence":  c.get("parser_confidence", 0.0),
+                }
+            )
+    else:
+        derror("Parser", "No courses extracted from this block",
+               "Block may lack both a Course Title trigger and structured section headers")
+    # ───────────────────────────────────────────────────────────────────────
+
     print(f"[Structured Parser] Ingestion finished. Detected courses: {len(courses)}")
     return courses

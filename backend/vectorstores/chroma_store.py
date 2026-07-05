@@ -134,13 +134,23 @@ class VectorStore:
         elif metadata_filter:
             where_clause = metadata_filter
 
-        result = self.collection.query(
-            query_embeddings=query_embedding,
-            n_results=k,
-            where=where_clause
-        )
-        
+        try:
+            result = self.collection.query(
+                query_embeddings=query_embedding,
+                n_results=k,
+                where=where_clause
+            )
+        except Exception as e:
+            err = str(e)
+            # ChromaDB Rust HNSW "Nothing found on disk" — happens when the index
+            # hasn't been flushed to disk yet (e.g. fresh collection on first query).
+            if "Nothing found on disk" in err or "hnsw segment" in err.lower():
+                print(f"[Vector Retrieval] WARNING: HNSW index not ready yet ({err[:80]}). Returning empty.")
+                return {"documents": [[]], "metadatas": [[]], "distances": [[]], "ids": [[]]}
+            raise
+
         # Log filtered chunk count
         docs = result.get("documents") or [[]]
         print(f"[Vector Retrieval] filtered_chunks={len(docs[0]) if docs else 0}")
         return result
+

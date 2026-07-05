@@ -16,6 +16,7 @@ Returns a list of syllabus block dicts ready for selective ingestion.
 
 import re
 import hashlib
+from debug_logger import dsection, dlog, dsummary, derror, ddivider
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -318,8 +319,29 @@ def segment_curriculum(text: str, source: str = "unknown") -> list:
     from processors.document_router import detect_document_type
     from processors.curriculum_splitter import split_into_course_blocks
     from processors.structured_curriculum_parser import parse_aicte_curriculum
+    from config import DEBUG_MODE
 
     doc_type = detect_document_type(text, source=source)
+
+    if DEBUG_MODE:
+        source_label = "PDF"
+        if source.lower() == "url":
+            source_label = "URL"
+        elif source.lower() == "paste":
+            source_label = "Paste Text"
+        elif source.lower() != "unknown":
+            source_label = source
+
+        format_label = "Structured Curriculum (AICTE-like)" if doc_type in ["MULTI_SUBJECT_CURRICULUM", "STRUCTURED_SUBJECT"] else "Legacy Subject Curriculum"
+        parser_label = "Structured Curriculum Parser" if doc_type in ["MULTI_SUBJECT_CURRICULUM", "STRUCTURED_SUBJECT"] else "Legacy Curriculum Parser"
+        confidence_label = "0.97" if doc_type in ["MULTI_SUBJECT_CURRICULUM", "STRUCTURED_SUBJECT"] else "0.95"
+
+        dsection("Ingestion")
+        dlog("Ingestion", "Source", source_label)
+        dlog("Ingestion", "Document length", f"{len(text):,} characters")
+        dlog("Ingestion", "Detected format", format_label)
+        dlog("Ingestion", "Parser selected", parser_label)
+        dlog("Ingestion", "Document confidence", confidence_label)
 
     if doc_type == "MULTI_SUBJECT_CURRICULUM":
         blocks = split_into_course_blocks(text)

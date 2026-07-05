@@ -29,6 +29,7 @@ from services.curriculum_scope_validator import (
     validate_scope,
 )
 from config import SCOPE_VALIDATOR_ENABLED, SCOPE_HIGH_SIM_THR, SCOPE_OVERLAP_MIN_THR, SCOPE_CONCEPTS_TOP_N, SCOPE_SEMANTIC_CUTOFF
+from debug_logger import dsection, dlog, dlist, dsummary, derror, ddivider
 
 # --------------------------------------------------
 # App setup
@@ -389,6 +390,7 @@ def _build_result(q_text, similarity, top_chunks, analysis):
         "bloom_level":       analysis["bloom_level"],
         "difficulty":        analysis["difficulty"],
         "mapped_co":         analysis["mapped_co"],
+        "mapped_co_full":    analysis.get("mapped_co_full"),   # e.g. "PEC-IT801B.CO2"
         "mapped_pco":        analysis["mapped_pco"],
         # ---- existing LLM fields ----
         "llm_decision":      analysis["llm"]["llm_decision"]     if analysis["llm"] else None,
@@ -401,6 +403,7 @@ def _build_result(q_text, similarity, top_chunks, analysis):
         "concept_boost":     top_chunks[0].get("concept_boost", 0.0) if top_chunks else 0.0,
         "final_score":       similarity,
     }
+
 
 
 # --------------------------------------------------
@@ -993,7 +996,17 @@ def analyze():
             syllabus_meta=syllabus_meta,
         )
 
+        # Enrich with full CO identifier (e.g. "PEC-IT801B.CO2") for the UI
+        if analysis.get("mapped_co") and co_mapper:
+            try:
+                co_full = co_mapper.map_question_to_co_full(q_text, syllabus_id)
+                if co_full:
+                    analysis["mapped_co_full"] = co_full.get("full_co_id")
+            except Exception:
+                pass
+
         processed_results.append(_build_result(q_text, similarity, top_chunks, analysis))
+
 
     if len(questions) == 1:
         return jsonify({"mode": "single", **processed_results[0]})
@@ -1185,6 +1198,17 @@ def ingest_selected():
     for seg in to_ingest:
         sid = seg["syllabus_id"]
 
+        # ── DEBUG: Section 1 — Ingestion start ───────────────────────────────────
+        dsection("Ingestion")
+        dlog("Ingestion", "Subject",     seg.get("subject_name", "-"))
+        dlog("Ingestion", "Syllabus ID", sid)
+        dlog("Ingestion", "Department",  seg.get("department", "-"))
+        dlog("Ingestion", "Semester",    seg.get("semester", "-"))
+        dlog("Ingestion", "Elective",    seg.get("elective_type", "-"))
+        dlog("Ingestion", "Parser",      seg.get("parser", "legacy"))
+        dlog("Ingestion", "Text length", f"{len(seg.get('syllabus_text','')  ):,} chars")
+        # ──────────────────────────────────────────────────────
+
         # Duplicate prevention
         if vector_db.exists(sid):
             print(f"[Ingestion] Skipping duplicate: {sid}")
@@ -1214,10 +1238,21 @@ def ingest_selected():
         clean_chunks, purged = filter_chunks_for_embedding(ref_filtered)
 
         if not clean_chunks:
+            derror("Ingestion", f"No quality chunks for {sid} — skipping",
+                   f"raw={len(raw_chunks)} ref_filtered={len(ref_filtered)} quality=0")
             print(f"[Ingestion] No quality chunks for {sid} — skipping.")
             skipped.append(sid)
             continue
 
+        # ── DEBUG: Section 6 — Database store ────────────────────────────────
+        dsection("Database")
+        dlog("Database", "Collection",        "syllabus_chunks")
+        dlog("Database", "Syllabus ID",       sid)
+        dlog("Database", "Raw chunks",        len(raw_chunks))
+        dlog("Database", "After ref filter",  len(ref_filtered))
+        dlog("Database", "After quality gate", len(clean_chunks))
+        dlog("Database", "Low-info purged",   purged)
+        # ──────────────────────────────────────────────────────
         print(f"[Ingestion] {sid}: {len(clean_chunks)} quality chunks ({purged} low-info purged)")
 
         extra_meta = {
@@ -1232,12 +1267,15 @@ def ingest_selected():
             "metadata_confidence":    seg.get("metadata_confidence"),
         }
         vector_db.add_syllabus(sid, clean_chunks, extra_meta=extra_meta)
+        dlog("Database", "Vectors stored", f"{len(clean_chunks)} chunks embedded and saved")
 
         # Existing ConceptStore (retrieval boosting)
         try:
             concept_store.add_syllabus_concepts(sid, [c for c, _ in clean_chunks])
+            dlog("Database", "Concept store", "updated")
             print(f"[Ingestion] Extracted local concepts for {sid}")
         except Exception as e:
+            derror("Database", "Concept store update failed", str(e))
             print(f"[Ingestion] Failed to extract concepts for {sid}: {e}")
 
         # Curriculum Scope Validator — extract and store domain concepts
@@ -1245,7 +1283,9 @@ def ingest_selected():
             _scope_text = " ".join(c for c, _ in clean_chunks)
             _scope_concepts = extract_syllabus_concepts(_scope_text, top_n=SCOPE_CONCEPTS_TOP_N)
             store_scope_concepts(sid, _scope_concepts)
+            dlog("Database", "Scope concepts stored", len(_scope_concepts))
         except Exception as _e:
+            derror("Database", "Scope concept extraction failed", str(_e))
             print(f"[ScopeValidator] Concept extraction failed for {sid}: {_e}")
 
         # Auto-ingest parsed CO-PO mappings
@@ -1253,10 +1293,25 @@ def ingest_selected():
             try:
                 parsed_cos = seg["parsed"].get("course_outcomes", [])
                 if parsed_cos:
-                    cos_payload = [{"co_id": c["co"], "text": c["text"]} for c in parsed_cos]
+                    course_code = seg.get("subject_code", "") or sid
+                    # Build rich payload with course_code and full_co_id
+                    cos_payload = [
+                        {
+                            "co_id"      : c["co"],
+                            "full_co_id" : f"{course_code}.{c['co']}",
+                            "course_code": course_code,
+                            "text"       : c["text"],
+                        }
+                        for c in parsed_cos
+                    ]
+                    # Clear any stale CO records for this syllabus before re-inserting
+                    co_mapper.clear_cos_for_syllabus(sid)
                     co_mapper.add_cos(sid, cos_payload)
+                    dlog("Database", "COs stored in CO collection", len(cos_payload))
                     print(f"[Ingestion] Auto-ingested {len(cos_payload)} COs for {sid}")
-                
+                else:
+                    derror("Database", "No COs to store", "parsed block had empty course_outcomes")
+
                 parsed_mappings = seg["parsed"].get("co_po_mapping", {})
                 if parsed_mappings:
                     pcos_payload = []
@@ -1266,8 +1321,12 @@ def ingest_selected():
                             pcos_payload.append({"co_id": co_id, "pco_id": primary_po})
                     if pcos_payload:
                         co_mapper.add_pcos(sid, pcos_payload)
+                        dlog("Database", "CO-PO mappings stored", len(pcos_payload))
                         print(f"[Ingestion] Auto-ingested {len(pcos_payload)} PO mappings for {sid}")
+                else:
+                    derror("Database", "No CO-PO mapping to store", "parsed block had empty co_po_mapping")
             except Exception as _e:
+                derror("Database", "CO-PO auto-ingest failed", str(_e))
                 print(f"[Ingestion] Failed to auto-ingest parsed CO-PO for {sid}: {_e}")
 
         SYLLABI[sid] = {
@@ -1291,6 +1350,27 @@ def ingest_selected():
 
     # Clean up parsed segments cache
     PARSED_SEGMENTS.pop(parse_id, None)
+
+    # ── DEBUG: Ingestion Summary (Section 10) ──────────────────────────────
+    db_chunk_count = 0
+    try:
+        db_chunk_count = vector_db.collection.count()
+    except Exception:
+        pass
+
+    dsummary(
+        "Ingestion Summary",
+        {
+            "Ingested count":      len(ingested),
+            "Ingested subjects":   ", ".join(ingested) if ingested else "None",
+            "Skipped count":       len(skipped),
+            "Skipped subjects":    ", ".join(skipped) if skipped else "None",
+            "Chunks generated":    total_chunks,
+            "ChromaDB collection": "syllabi",
+            "ChromaDB total size": f"{db_chunk_count} chunks",
+        }
+    )
+    # ───────────────────────────────────────────────────────────────────────
 
     return jsonify({
         "success":            True,

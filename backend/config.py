@@ -3,6 +3,14 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# --------------------------------------------------
+# Debug / Observability
+# --------------------------------------------------
+# Set to True to print detailed pipeline traces to the terminal.
+# Set to False to restore silent production behaviour.
+DEBUG_MODE = True
+
+
 # Path to your GGUF model file
 LLM_MODEL_PATH = os.path.join(BASE_DIR, "models", "mistral-7b-instruct-v0.2.Q4_K_M.gguf")
 
