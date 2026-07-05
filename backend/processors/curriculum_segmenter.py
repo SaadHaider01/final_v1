@@ -211,6 +211,10 @@ def _sem_to_roman(sem: str) -> str:
     # Already roman
     if re.fullmatch(r"[IVXLC]+", sem):
         return sem
+    # Strip ordinal suffix: "8TH" -> "8", "3RD" -> "3", "1ST" -> "1"
+    ordinal_match = re.fullmatch(r"(\d+)(?:ST|ND|RD|TH)", sem)
+    if ordinal_match:
+        sem = ordinal_match.group(1)
     # Arabic number
     if re.fullmatch(r"\d+", sem):
         arabic = int(sem)
@@ -302,11 +306,36 @@ def _extract_modules(block_text: str) -> list:
 # STATE-BASED HIERARCHICAL PARSER
 # ═══════════════════════════════════════════════════════════════════
 
-def segment_curriculum(text: str) -> list:
+def segment_curriculum(text: str, source: str = "unknown") -> list:
     """
-    Overhauled state-based curriculum parser.
-    Levels: Global Context → Semester Context → Subject Context
+    Curriculum segmenter with three-branch routing layer.
+
+    Routes the extracted text to the correct parser based on document structure:
+      - MULTI_SUBJECT_CURRICULUM → Splitter → Structured Parser (per block)
+      - STRUCTURED_SUBJECT       → Structured Parser (directly)
+      - LEGACY_SUBJECT           → Existing legacy parser (unchanged)
     """
+    from processors.document_router import detect_document_type
+    from processors.curriculum_splitter import split_into_course_blocks
+    from processors.structured_curriculum_parser import parse_aicte_curriculum
+
+    doc_type = detect_document_type(text, source=source)
+
+    if doc_type == "MULTI_SUBJECT_CURRICULUM":
+        blocks = split_into_course_blocks(text)
+        results = []
+        for i, block in enumerate(blocks):
+            print(f"[Router] Routing Block {i + 1} to Structured Parser")
+            results.extend(parse_aicte_curriculum(block))
+        print(f"[Router] Multi-curriculum total subjects parsed: {len(results)}")
+        return results
+
+    if doc_type == "STRUCTURED_SUBJECT":
+        print("[Router] Routing single structured course to Structured Parser.")
+        return parse_aicte_curriculum(text)
+
+    # ── LEGACY_SUBJECT — existing parser, zero changes below ──────────
+    print("[Router] Routing to existing legacy parser.")
     print(f"[Curriculum Parser] Input text length: {len(text)} chars")
     
     # Step 1: pre-clean noise

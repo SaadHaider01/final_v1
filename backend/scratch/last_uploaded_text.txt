@@ -1,0 +1,131 @@
+MaulanaAbulKalam Azad University ofTechnology
+(Formerly WestBengal UniversityofTechnology)
+Syllabus and CurricularMappingforB.Tech.inInformation Technology
+EffectivefromAcdemic Session 2023-24
+ProgramOutcomes(PO) [definedbyNBA]
+EngineeringGraduateswillbeableto:
+PO-1. Engineeringknowledge:Applytheknowledgeofmathematics,science,engineeringfundamentals,andanengineering
+specializationtothesolutionofcomplexengineeringproblems.
+PO-2. Problemanalysis:Identify,formulate,reviewresearchliterature,andanalysecomplexengineeringproblemsreaching
+substantiatedconclusionsusingfirstprinciplesofmathematics,naturalsciences,andengineeringsciences.
+PO-3. Design/developmentofsolutions:Designsolutionsforcomplexengineeringproblemsanddesignsystemcomponents
+or processes that meet the specified needs with appropriate consideration for the public health and safety, and the
+cultural,societal,andenvironmentalconsiderations.
+PO-4. Conductinvestigationsofcomplexproblems:Useresearch-basedknowledgeandresearchmethodsincludingdesign
+ofexperiments,analysisandinterpretationofdata,andsynthesisoftheinformationtoprovidevalidconclusions.
+PO-5. Moderntoolusage:Create,select,andapplyappropriatetechniques,resources,andmodernengineeringandITtools
+includingpredictionandmodelingtocomplexengineeringactivitieswithanunderstandingofthelimitations.
+PO-6. The engineer and society: Apply reasoning informed by the contextual knowledge to assess societal, health, safety,
+legalandculturalissuesandtheconsequentresponsibilitiesrelevanttotheprofessionalengineeringpractice.
+PO-7. Environment and sustainability: Understand the impact of the professional engineering solutions in societal and
+environmentalcontexts,anddemonstratetheknowledgeof,andneedforsustainabledevelopment.
+PO-8. Ethics: Apply ethical principles and commit to professional ethics and responsibilities and norms of the engineering
+practice.
+PO-9. Individualandteamwork:Functioneffectivelyasanindividual,andasamemberorleaderindiverseteams,andin
+multidisciplinarysettings.
+PO-10. Communication: Communicate effectively on complex engineering activities with the engineering community and
+with society at large, such as, beingable to comprehend andwrite effective reportsand design documentation, make
+effectivepresentations,andgiveandreceiveclearinstructions.
+PO-11. Project management and finance: Demonstrate knowledge and understanding of the engineering and management
+principles and apply these to one’s own work, as a member and leader in a team, to manage projects and in
+multidisciplinaryenvironments.
+PO-12. Life-longlearning:Recognizetheneedfor,andhavethepreparationandabilitytoengageinindependentandlife-long
+learninginthebroadestcontextoftechnologicalchange.
+ModelProgramSpecificOutcomes(PSO)
+PSO-1. Ability to develop smart programming skills through comprehensive understanding of analytical and logical
+conceptsandalgorithms.
+PSO-2. Ability to investigate social, environmental, ethical and economic feasibility of an IT solution to a complex/
+compositeproblemintermsoflong-termimpactandsustainabilityofeveryintricateapplication.
+PSO-3. Ability to keep pace with fast changing technology like Machine Learning, Cloud Computing, IOT, Pattern
+Recognitionandadapttonewtools,systems&applicationsandmanagechallengingITprojects.
+Page: 1/123
+MaulanaAbulKalam Azad University ofTechnology
+(Formerly WestBengal UniversityofTechnology)
+Syllabus and CurricularMappingforB.Tech.inInformation Technology
+EffectivefromAcdemic Session 2023-24
+SEMESTER–VIII
+THEORY
+CourseTitle:Cryptography&NetworkSecurity Code:PEC-IT801B
+TypeOfCourse:Theory CourseDesignation:Elective
+Semester:8th ContactHours: 3L/week
+ContinuousAssessment:25Marks FinalExam:70Marks
+Writer:CourseCoordinator Approvedby ProgramAssessment
+Committee(PAC)
+Pre-requisites:PCC-CS602ComputerNetworking,PEC-IT701AInternetTechnology.
+COURSEOBJECTIVE:
+ UnderstandbasicsofCryptographyandNetworkSecurity.
+ LearningabouthowtomaintaintheConfidentiality,IntegrityandAuthenticityofadata.
+ Explainvariousprotocolsfornetworksecuritytoprotectagainstthethreatsinthenetworks.
+COURSEOUTCOMES(COs)
+Oncompletionofthecoursestudentswillbeableto
+CourseOutcomes COstatement KnowledgeLevelof
+revisedBloom’s
+Taxonomy
+PEC-IT801B.CO1 Acquirebackgroundknowledgeinsecurityissues,services,targets Understanding(LevelII)
+andmechanism.
+PEC-IT801B.CO2 UnderstandthefundamentalconceptofCryptographyandNetwork Understanding(LevelII)
+Security,theiroperationaltools.
+PEC-IT801B.CO3 AppraisetheuseDataencryptionstandardrelatedtosecurityof Evaluating(LevelV)
+information.
+PEC-IT801B.CO4 Analyzethevulnerabilitiesinanycomputingsystemandhencebe AnalyzingLevelIV)
+abletodesignasecuritysolution.
+PEC-IT801B.CO5 Evaluatesecuritymechanismsusingrigorousapproachesbykey Evaluating(LevelV)
+ciphersandHashfunctions.
+PEC-IT801B.CO6 Demonstratevariousnetworksecurityapplications,SSLprotocol Applying(LevelIII)
+andAuthentication,Firewall,WebSecurity,EmailSecurity,
+S/MIMEandMalicioussoftware.
+MappingofCOswithPOsandPSOs(CourseArticulationMatrix):
+PO1 PO2 PO3 PO4 PO5 PO6 PO7 PO8 PO9 PO10 PO11 PO12 PSO1 PSO2 PSO3
+CO1 3 1 1 - - 1 1 1 - - - 1 1 1 1
+CO2 3 1 1 - - 1 1 1 - - - 1 1 1 1
+CO3 3 2 2 1 - 1 1 1 - - - 1 1 1 2
+CO4 3 3 3 2 - 1 1 1 - - - 1 1 1 2
+CO5 3 3 3 2 - 1 1 1 - - - 1 1 1 2
+CO6 3 2 2 2 - 1 1 1 - - - 1 1 1 2
+AVG. 3.00 2.00 2.00 1.75 0 1.00 1.00 1.00 0 0 0 1.00 1.00 1.00 1.67
+Page: 116/123
+MaulanaAbulKalam Azad University ofTechnology
+(Formerly WestBengal UniversityofTechnology)
+Syllabus and CurricularMappingforB.Tech.inInformation Technology
+EffectivefromAcdemic Session 2023-24
+UniversitySyllabus:
+Unit Content Hrs/Unit
+1 Attacks on Computers& Computer Security- Introduction,Need for Security, Security approaches, 5
+PrinciplesofSecurity,Typesofattack
+2 Cryptography:Concepts&TechniquesIntroduction,Plaintext&Ciphertext,SubstitutionTechniques, 7
+Transposition Techniques, Encryption & Decryption, Symmetric & Asymmetric key Cryptography,
+KeyRange&KeySize
+3 Symmetric Key Algorithm - Introduction, Algorithm types & Modes, Overview of Symmetric Key 8
+Cryptography, DES(Data Encryption Standard) algorithm, IDEA(International Data Encryption
+Algorithm)algorithm,RC5(RivestCipher5)algorithm.
+4 AsymmetricKeyAlgorithm,DigitalSignatureandRSA-Introduction,OverviewofAsymmetrickey 5
+Cryptography, RSA algorithm, Symmetric & Asymmetric key Cryptography together, Digital
+Signature,BasicconceptsofMessageDigestandHashFunction(AlgorithmsonMessageDigestand
+Hashfunctionnotrequired).
+5 Internet Security Protocols, User Authentication - Basic Concepts, SSL protocol, Authentication 6
+Basics,Password,AuthenticationToken,CertificatebasedAuthentication,BiometricAuthentication
+6 ElectronicMailSecurity-Basicsofmailsecurity,PrettyGoodPrivacy,S/MIME. 4
+7 Firewall-Introduction,Typesoffirewall,FirewallConfigurations,DMZNetwork 3
+GATEsyllabus(IfapplicableforGATE):
+GATEsyllabuscontent Mappingunitofuniversitysyllabus
+Networksecurity Unit1
+Basics of public key and private key cryptography, digital Unit2
+signaturesandcertificates
+Authentication Token, Certificate based Authentication, Unit6
+BiometricAuthentication.
+RESOURCES:
+1.“NetworkSecurityEssentials:ApplicationsandStandards”byWilliamStallings,Pearson
+2.“DesigningNetworkSecurity”,MerikeKaeo,2ndEdition,PearsonBooks
+CourseTitle:E-Commerce&ERP Code:OEC-IT802A
+TypeOfCourse:Theory CourseDesignation:Elective
+Semester:7th ContactHours: 3L/week
+ContinuousAssessment:25Marks FinalExam:70Marks
+Writer:CourseCoordinator Approvedby ProgramAssessment
+Committee(PAC)
+Pre-requisites:PCC-CS503OOP,PCC-CS602ComputerNetwork.
+COURSEOBJECTIVE:
+ Introducee-commerceanditsvariouscategories.
+ ExplainEDIanditstechnicaldetails.
+ Illustratelegalandsecurityaspectsofe-commerce.
+ DiscussideasonERPimplementationsanditsbenefits.
+Page: 117/123

@@ -473,7 +473,7 @@ def ingest_syllabus():
         if not text.strip():
             return jsonify({"error": "Empty syllabus text"}), 400
 
-    segments = segment_curriculum(text)
+    segments = segment_curriculum(text, source="PDF" if mode in ["pdf", "file", "document"] else "Paste")
     
     # Fallback if no segments detected
     if not segments:
@@ -553,6 +553,15 @@ def ingest_syllabus():
                     cos_stored += co_mapper.add_cos(seg_id, cos)
             except (json.JSONDecodeError, KeyError):
                 pass
+        elif "parsed" in seg:
+            # Auto-ingest parsed COs
+            try:
+                parsed_cos = seg["parsed"].get("course_outcomes", [])
+                if parsed_cos:
+                    cos_payload = [{"co_id": c["co"], "text": c["text"]} for c in parsed_cos]
+                    cos_stored += co_mapper.add_cos(seg_id, cos_payload)
+            except Exception as _e:
+                print(f"[Ingest Auto CO] Failed for {seg_id}: {_e}")
 
         if pcos_raw:
             try:
@@ -561,6 +570,20 @@ def ingest_syllabus():
                     pcos_stored += co_mapper.add_pcos(seg_id, pcos)
             except (json.JSONDecodeError, KeyError):
                 pass
+        elif "parsed" in seg:
+            # Auto-ingest parsed CO-PO mapping
+            try:
+                parsed_mappings = seg["parsed"].get("co_po_mapping", {})
+                if parsed_mappings:
+                    pcos_payload = []
+                    for co_id, po_dict in parsed_mappings.items():
+                        if po_dict:
+                            primary_po = max(po_dict, key=po_dict.get)
+                            pcos_payload.append({"co_id": co_id, "pco_id": primary_po})
+                    if pcos_payload:
+                        pcos_stored += co_mapper.add_pcos(seg_id, pcos_payload)
+            except Exception as _e:
+                print(f"[Ingest Auto PCO] Failed for {seg_id}: {_e}")
 
     return jsonify({
         "success":     True,
@@ -601,7 +624,7 @@ def ingest_from_url():
         return jsonify({"error": str(e)}), 422
 
     syllabus_id = str(uuid.uuid4())
-    segments = segment_curriculum(text)
+    segments = segment_curriculum(text, source="URL")
     
     if not segments:
         extracted = extract_metadata(text)
@@ -691,6 +714,15 @@ def ingest_from_url():
                     cos_stored += co_mapper.add_cos(seg_id, cos)
             except (json.JSONDecodeError, KeyError):
                 pass
+        elif "parsed" in seg:
+            # Auto-ingest parsed COs
+            try:
+                parsed_cos = seg["parsed"].get("course_outcomes", [])
+                if parsed_cos:
+                    cos_payload = [{"co_id": c["co"], "text": c["text"]} for c in parsed_cos]
+                    cos_stored += co_mapper.add_cos(seg_id, cos_payload)
+            except Exception as _e:
+                print(f"[Ingest Auto CO URL] Failed for {seg_id}: {_e}")
 
         if pcos_raw:
             try:
@@ -699,6 +731,20 @@ def ingest_from_url():
                     pcos_stored += co_mapper.add_pcos(seg_id, pcos)
             except (json.JSONDecodeError, KeyError):
                 pass
+        elif "parsed" in seg:
+            # Auto-ingest parsed CO-PO mapping
+            try:
+                parsed_mappings = seg["parsed"].get("co_po_mapping", {})
+                if parsed_mappings:
+                    pcos_payload = []
+                    for co_id, po_dict in parsed_mappings.items():
+                        if po_dict:
+                            primary_po = max(po_dict, key=po_dict.get)
+                            pcos_payload.append({"co_id": co_id, "pco_id": primary_po})
+                    if pcos_payload:
+                        pcos_stored += co_mapper.add_pcos(seg_id, pcos_payload)
+            except Exception as _e:
+                print(f"[Ingest Auto PCO URL] Failed for {seg_id}: {_e}")
 
     return jsonify({
         "success":     True,
@@ -1043,7 +1089,15 @@ def parse_curriculum():
         if not text.strip():
             return jsonify({"error": "Empty text"}), 400
 
-    segments = segment_curriculum(text)
+    try:
+        import os
+        os.makedirs("scratch", exist_ok=True)
+        with open("scratch/last_uploaded_text.txt", "w", encoding="utf-8") as f:
+            f.write(text)
+    except Exception as _e:
+        print(f"[Diagnostics] Failed to write text: {_e}")
+
+    segments = segment_curriculum(text, source="PDF" if mode in ["pdf", "file", "document"] else ("URL" if mode == "url" else "Paste"))
     print(f"[Curriculum Parser] Detected subjects={[s['subject_name'] for s in segments]}")
 
     if not segments:
@@ -1108,7 +1162,11 @@ def ingest_selected():
     ingest_all = data.get("ingest_all", False)
 
     if not parse_id or parse_id not in PARSED_SEGMENTS:
-        return jsonify({"error": "Invalid or expired parse_id. Please re-upload the curriculum."}), 400
+        print(f"[Ingestion] parse_id '{parse_id}' not found — server may have reloaded, session expired.")
+        return jsonify({
+            "error": "Session expired. Please re-upload the curriculum PDF and parse again.",
+            "retry": True
+        }), 400
 
     segments = PARSED_SEGMENTS[parse_id]
 
@@ -1189,6 +1247,28 @@ def ingest_selected():
             store_scope_concepts(sid, _scope_concepts)
         except Exception as _e:
             print(f"[ScopeValidator] Concept extraction failed for {sid}: {_e}")
+
+        # Auto-ingest parsed CO-PO mappings
+        if "parsed" in seg:
+            try:
+                parsed_cos = seg["parsed"].get("course_outcomes", [])
+                if parsed_cos:
+                    cos_payload = [{"co_id": c["co"], "text": c["text"]} for c in parsed_cos]
+                    co_mapper.add_cos(sid, cos_payload)
+                    print(f"[Ingestion] Auto-ingested {len(cos_payload)} COs for {sid}")
+                
+                parsed_mappings = seg["parsed"].get("co_po_mapping", {})
+                if parsed_mappings:
+                    pcos_payload = []
+                    for co_id, po_dict in parsed_mappings.items():
+                        if po_dict:
+                            primary_po = max(po_dict, key=po_dict.get)
+                            pcos_payload.append({"co_id": co_id, "pco_id": primary_po})
+                    if pcos_payload:
+                        co_mapper.add_pcos(sid, pcos_payload)
+                        print(f"[Ingestion] Auto-ingested {len(pcos_payload)} PO mappings for {sid}")
+            except Exception as _e:
+                print(f"[Ingestion] Failed to auto-ingest parsed CO-PO for {sid}: {_e}")
 
         SYLLABI[sid] = {
             "syllabus_id":           sid,
