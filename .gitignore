@@ -58,3 +58,15 @@ backend/vector_db/
 .env.*
 TECHNOLOGIES.md
 PRESENTATION_GUIDE.md
+evaluation/B1_cm.png
+evaluation/B2_cm.png
+evaluation/B3_cm.png
+evaluation/B4_cm.png
+evaluation/B5_cm.png
+evaluation/baseline_1_cm.png
+evaluation/baseline_2_cm.png
+evaluation/baseline_3_cm.png
+evaluation/baseline_4_cm.png
+evaluation/baseline_5_cm.png
+evaluation/accuracy_comparison.png
+evaluation/metrics_comparison.png
