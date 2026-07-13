@@ -4,27 +4,27 @@ import Card from '../components/common/Card';
 
 function About() {
   const teamMembers = [
-    {
-      name: 'Saad Haider',
-      role: 'Lead Developer',
-      contributions: 'RAG architecture design, SBERT integration, system implementation, URL ingestion pipeline',
-    },
-    {
-      name: 'Piklu Kundu',
-      role: 'ML Engineer',
-      contributions: 'LLM validation module, few-shot prompting strategy, Bloom\'s Taxonomy Classifier',
-    },
-    {
-      name: 'Niloy Pal',
-      role: 'Full-Stack Developer',
-      contributions: 'Frontend interface, API design, ChromaDB integration, Two-Phase Ingestion UX',
-    },
-    {
-      name: 'Baidurya Muhuri',
-      role: 'Data Engineer',
-      contributions: 'Syllabus preprocessing, chunking algorithms, dataset curation, CO/PO Semantic Mapper',
-    },
-  ];
+  {
+    name: 'Saad Haider',
+    role: 'Lead Developer',
+    contributions: 'System architecture, Backend development, RAG pipeline, SBERT integration, Hybrid Retrieval, System integration',
+  },
+  {
+    name: 'Piklu Kundu',
+    role: 'ML Engineer',
+    contributions: 'LLM validation module, Prompt engineering, Bloom\'s Taxonomy classifier, Response explanation',
+  },
+  {
+    name: 'Niloy Pal',
+    role: 'Full-Stack Developer',
+    contributions: 'React frontend, Dashboard development, REST API integration, PDF upload workflow, Two-phase ingestion UI',
+  },
+  {
+    name: 'Baidurya Muhuri',
+    role: 'Data Engineer',
+    contributions: 'Syllabus preprocessing, Semantic chunking, Dataset preparation, CO/PO mapping support, Evaluation dataset',
+  },
+];
 
   const mentors = [
     {
