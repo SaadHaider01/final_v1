@@ -9,7 +9,7 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h3 className="text-white font-semibold text-lg mb-4">
-              RAG-Based Syllabus Analyzer
+              AI-Powered Syllabus Validator
             </h3>
             <p className="text-sm">
               An intelligent system for automated syllabus relevance checking using
@@ -56,7 +56,7 @@ function Footer() {
 
         <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm">
           <p>
-            © {currentYear} RAG-Based Syllabus Analyzer. Final Year Project - Department of Information Technology.
+            © {currentYear} AI-Powered Syllabus Validator. Final Year Project - Department of Information Technology.
           </p>
         </div>
       </div>

@@ -22,8 +22,8 @@ function Architecture() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-300 h-full flex flex-col justify-center">
-                    <div className="text-3xl mb-2">📄</div>
-                    <div className="font-semibold text-sm">PDF/Text Input</div>
+                    <div className="text-3xl mb-2">🌐/📄</div>
+                    <div className="font-semibold text-sm">Text/PDF/URL</div>
                   </div>
                 </div>
                 <div className="flex items-center justify-center">
@@ -104,6 +104,24 @@ function Architecture() {
                   </div>
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 max-w-xl mx-auto">
+                <div className="text-center">
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-pink-300 h-full flex flex-col justify-center">
+                    <div className="text-3xl mb-2">📊</div>
+                    <div className="font-semibold text-sm">Bloom's Classifier</div>
+                    <div className="text-xs text-gray-600 mt-1">Two-Pass Logic</div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-teal-300 h-full flex flex-col justify-center">
+                    <div className="text-3xl mb-2">🎯</div>
+                    <div className="font-semibold text-sm">CO/PO Mapper</div>
+                    <div className="text-xs text-gray-600 mt-1">Outcome Alignment</div>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-center mt-6">
                 <div className="text-center max-w-xs">
                   <div className="bg-gradient-to-r from-accent-100 to-accent-200 p-4 rounded-lg shadow-md border-2 border-accent-400">
@@ -164,6 +182,23 @@ function Architecture() {
               only Algorithm B are out-of-scope
             </div>
           </Card>
+
+          <Card>
+            <h4 className="text-lg font-semibold text-pink-700 mb-3">Bloom's Taxonomy Classifier</h4>
+            <p className="text-gray-700 text-sm leading-relaxed mb-2">
+              A hybrid two-pass system that first uses fast, deterministic cognitive action-verb mapping, 
+              and falls back to a WH-question heuristic router for complex questions. It reliably matches 
+              exam questions to cognitive difficulty levels.
+            </p>
+          </Card>
+
+          <Card>
+            <h4 className="text-lg font-semibold text-teal-700 mb-3">CO/PO Semantic Mapper</h4>
+            <p className="text-gray-700 text-sm leading-relaxed mb-2">
+              Ingests course learning outcomes and maps exam questions semantically to the closest Course Outcome (CO) 
+              and Program Outcome (PO), automatically producing institutional alignment logs.
+            </p>
+          </Card>
         </div>
 
         {/* Key Design Decisions */}
@@ -196,6 +231,12 @@ function Architecture() {
               <p className="text-gray-700 text-sm">
                 All models (SBERT, LLM) are downloaded and run locally, ensuring data privacy, offline operation, 
                 and eliminating API costs and latency.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-1">Pedagogical Enrichment</h4>
+              <p className="text-gray-700 text-sm">
+                Beyond simply verifying if a topic exists in the syllabus, the system maps questions to Bloom's cognitive levels and institutional learning outcomes, automating the most tedious parts of academic quality audits.
               </p>
             </div>
           </div>

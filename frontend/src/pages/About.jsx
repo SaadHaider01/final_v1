@@ -7,22 +7,22 @@ function About() {
     {
       name: 'Saad Haider',
       role: 'Lead Developer',
-      contributions: 'RAG architecture design, SBERT integration, system implementation',
+      contributions: 'RAG architecture design, SBERT integration, system implementation, URL ingestion pipeline',
     },
     {
       name: 'Piklu Kundu',
       role: 'ML Engineer',
-      contributions: 'LLM validation module, few-shot prompting strategy, experimental evaluation',
+      contributions: 'LLM validation module, few-shot prompting strategy, Bloom\'s Taxonomy Classifier',
     },
     {
       name: 'Niloy Pal',
       role: 'Full-Stack Developer',
-      contributions: 'Frontend interface, API design, ChromaDB integration',
+      contributions: 'Frontend interface, API design, ChromaDB integration, Two-Phase Ingestion UX',
     },
     {
       name: 'Baidurya Muhuri',
       role: 'Data Engineer',
-      contributions: 'Syllabus preprocessing, chunking algorithms, dataset curation',
+      contributions: 'Syllabus preprocessing, chunking algorithms, dataset curation, CO/PO Semantic Mapper',
     },
   ];
 
@@ -49,11 +49,11 @@ function About() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700">
             <div>
               <div className="font-semibold text-gray-900 mb-1">Project Title</div>
-              <div>RAG-Based Semantic Question Analyzer for Syllabus Relevance Verification</div>
+              <div>AI-Powered Syllabus Validation System using Hybrid Retrieval-Augmented Generation and Curriculum Intelligence</div>
             </div>
             <div>
               <div className="font-semibold text-gray-900 mb-1">Academic Year</div>
-              <div>2024-2025</div>
+              <div>2025-2026</div>
             </div>
             <div>
               <div className="font-semibold text-gray-900 mb-1">Department</div>

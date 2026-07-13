@@ -34,6 +34,10 @@ The system has evolved from a naive semantic retriever into a robust, context-aw
 - **🪄 Auto-Detect Context (`/detect_subject`):** Allows faculty to paste a question paper or upload a PDF. The system extracts subject metadata via structured regex and queries ChromaDB (first 1000 characters) to semantically identify and automatically select the matching syllabus.
 - **Startup Hydration Engine:** On startup, the server automatically scans and hydrates the in-memory syllabus index from persistent ChromaDB collection meta tables, ensuring consistency after backend server restarts.
 
+### 6. Automated Baseline Evaluation Suite
+- **Reproducible Pipeline (`run_evaluation.py`):** An independent academic benchmarking tool that processes hundreds of syllabus-question pairs to generate definitive evaluation metrics (Accuracy, Precision, Recall, F1-Score) and a detailed confusion matrix heatmap.
+- **Interactive Data Seeder (`seed_dataset.py`):** Enables faculty to instantly auto-generate labelled `IN_SYLLABUS` and `OUT_OF_SYLLABUS` testing data based directly on the ingested curriculum collections.
+
 ---
 
 ## 🏗️ Architecture Overview

@@ -71,7 +71,7 @@ function Playground() {
     <div className="section-container">
       <SectionHeader
         title="Interactive Demo"
-        subtitle="Try the RAG-based syllabus analyzer with your own syllabi and questions"
+        subtitle="Try the AI-powered syllabus validator with your own syllabi and questions"
       />
 
       <div className="max-w-7xl mx-auto">

@@ -8,7 +8,7 @@ function Home() {
       <section className="bg-gradient-to-br from-primary-600 via-primary-700 to-accent-700 text-white">
         <div className="section-container text-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            RAG-Based Semantic Question Analyzer
+            AI-Powered Syllabus Validation System using Hybrid Retrieval-Augmented Generation and Curriculum Intelligence
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-4xl mx-auto text-primary-100">
             Intelligent automated syllabus relevance verification using Retrieval-Augmented Generation, 
@@ -43,12 +43,14 @@ function Home() {
           <p className="text-lg text-gray-700 leading-relaxed mb-6">
             Our solution implements a <strong>Retrieval-Augmented Generation (RAG)</strong> pipeline that 
             combines semantic embeddings, vector similarity search, and LLM-based validation to automatically 
-            determine whether exam questions fall within the prescribed syllabus boundaries.
+            determine whether exam questions fall within the prescribed syllabus boundaries. 
+            Beyond relevance verification, the system features deep pedagogical intelligence to perform 
+            automated <strong>Bloom's Taxonomy classification</strong> and <strong>Course/Program Outcome (CO/PO) mapping</strong>.
           </p>
           <p className="text-lg text-gray-700 leading-relaxed">
-            The system features a two-stage architecture: a <strong>Cosine Gatekeeper</strong> that filters 
-            semantically distant questions to reduce computational costs, followed by an <strong>LLM Curriculum 
-            Validator</strong> that makes the final judgment using few-shot prompting with domain-agnostic rules.
+            The system features a multi-stage architecture: a <strong>Cosine Gatekeeper</strong> that filters 
+            semantically distant questions to reduce computational costs, pedagogical mappers to classify learning objectives, 
+            and a final <strong>LLM Curriculum Validator</strong> that provides explainable judgments using few-shot prompting.
           </p>
         </div>
       </section>
@@ -56,7 +58,7 @@ function Home() {
       {/* Key Features */}
       <section className="section-container bg-gray-50">
         <h2 className="text-center mb-12">Key Features & Impact</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="card text-center">
             <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,6 +130,30 @@ function Home() {
               Works across any engineering discipline and adaptable to non-engineering subjects
             </p>
           </div>
+
+          <div className="card text-center">
+            <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-3">Pedagogical Mapping</h3>
+            <p className="text-gray-600">
+              Automatically maps questions to Bloom's Taxonomy levels and Course/Program Outcomes
+            </p>
+          </div>
+
+          <div className="card text-center">
+            <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-3">Flexible Ingestion</h3>
+            <p className="text-gray-600">
+              Two-phase ingestion supports Multi-subject curricula from raw text, PDFs, or public URLs
+            </p>
+          </div>
         </div>
       </section>
 
@@ -135,7 +161,7 @@ function Home() {
       <section className="section-container bg-gradient-to-r from-primary-600 to-accent-600 text-white text-center">
         <h2 className="text-white mb-6">Ready to explore the system?</h2>
         <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-          Try our interactive demo to see how the RAG-based analyzer processes questions and validates 
+          Try our interactive demo to see how the AI-powered validator processes questions and validates 
           their relevance against syllabus content.
         </p>
         <Link

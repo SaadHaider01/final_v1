@@ -24,10 +24,10 @@ function Navbar() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">RAG</span>
+                <span className="text-white font-bold text-xl">AI</span>
               </div>
               <span className="hidden sm:block text-xl font-semibold text-gray-900">
-                Syllabus Analyzer
+                Syllabus Validator
               </span>
             </Link>
           </div>

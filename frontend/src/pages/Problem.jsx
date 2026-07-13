@@ -113,7 +113,7 @@ function Problem() {
         <Card className="bg-primary-50 border-primary-200">
           <h3 className="text-2xl font-semibold mb-4">Our Solution</h3>
           <p className="text-gray-700 leading-relaxed">
-            This project addresses these challenges through a <strong>RAG-based semantic question analyzer</strong> that 
+            This project addresses these challenges through an <strong>AI-powered syllabus validator</strong> that 
             combines the power of modern NLP techniques: dense embeddings from Sentence-BERT, efficient vector similarity 
             search, a cosine similarity gatekeeper for cost optimization, and LLM-based curriculum validation for 
             nuanced decision-making. The result is an automated, scalable, and highly accurate system for syllabus 
